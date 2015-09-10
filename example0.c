@@ -37,4 +37,4 @@ int main(void) {
     fclose(ofp);
 
 }
-//ss
+//ss. hows life?
