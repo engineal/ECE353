@@ -84,7 +84,7 @@ char generateKeyByte (char S[]){
 	i = (i+1) % MAX_LENGTH; 
 	j = (j+S[i]) % MAX_LENGTH; 
 	swap (&S[i], &S[j]);
-	t = (S[i]+S[j]) % MAX_LENGTH; 
+	int t = (S[i]+S[j]) % MAX_LENGTH; 
 	return S[t];
 
 }
