@@ -49,6 +49,7 @@ x64/
 build/
 [Bb]in/
 [Oo]bj/
+*.out
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -213,4 +214,4 @@ pip-log.txt
 *.mo
 
 #Mr Developer
-.mr.developer.cfg
+.mr.developer.cfz
