@@ -19,8 +19,8 @@ int main(void) {
     FILE *keyStreamFile;
     FILE *encryptedTextFile;
     char inputChar;
+    char keyChar;
     char outputChar;
-    char keyChar; 
     int kLength = 0;
     char key[MAX_LENGTH];
     char S[MAX_LENGTH];
@@ -57,25 +57,30 @@ int main(void) {
     while ((inputChar = fgetc(plainTextFile)) != EOF) {
         keyChar = generateKeyByte(S);
         outputChar = inputChar ^ keyChar;
-        fputc(outputChar, encryptedTextFile); 
+        fputc(outputChar, encryptedTextFile);
+        if (outputChar == EOF) {
+            printf("Woops! %d, ", outputChar);
+        }
     }
 
     fclose(plainTextFile);
     fclose(keyStreamFile);
     fclose(encryptedTextFile);
-}//end of main
+} //end of main
 
 char generateKeyByte (char S[]){
     static int i = 0;
     static int j = 0;
-    i = (i+1) % MAX_LENGTH; 
-    j = (j+S[i]) % MAX_LENGTH; 
+    i = (i+1) % MAX_LENGTH;
+    j = (j+S[i]) % MAX_LENGTH;
     swap (&S[i], &S[j]);
-    int t = (S[i]+S[j]) % MAX_LENGTH; 
+    int t = (S[i]+S[j]) % MAX_LENGTH;
     return S[t];
 }
 
 void swap (char * a, char * b){
+    assert(a != NULL);
+    assert(b != NULL);
     char temp;
     temp = *a;
     *a = *b;
