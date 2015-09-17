@@ -1,8 +1,8 @@
-// Reads the input file in plainTextFile.txt,
-// character by character and then ex-ors them
-// with the previous character.  To start things off,
-// we ex-or the initial character with a given input.
-// The output is then written to an output file.
+/*ECE 353 Lab 0: Encryption and Decryption
+Sarah Mangels, Matteo Puzella, Aaron Lucia
+Sept 13, 2015
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,20 +11,20 @@
 
 #define MAX_LENGTH 256
 
-void swap (char *, char *);
-char generateKeyByte (char []);
+void swap (int *, int *);
+int generateKeyByte (int []);
 
 int main(void) {
     FILE *plainTextFile;
     FILE *keyStreamFile;
     FILE *encryptedTextFile;
-    char inputChar;
-    char outputChar;
-    char keyChar; 
+    int inputChar;
+    int outputChar;
+    int keyChar; 
     int kLength = 0;
-    char key[MAX_LENGTH];
-    char S[MAX_LENGTH];
-    char T[MAX_LENGTH];
+   int key[MAX_LENGTH];
+   int S[MAX_LENGTH];
+    int T[MAX_LENGTH];
 
     plainTextFile = fopen("./plainText.txt", "r");
     keyStreamFile = fopen("./keyFile.txt", "r"); 
@@ -50,22 +50,29 @@ int main(void) {
     int j =0; 
     for (int i =0; i< MAX_LENGTH; i++){
         j = (j+S[i]+T[i]) % MAX_LENGTH; 
+
+	assert(&S[i] != NULL); 
+
         swap (&S[i], &S[j]);
     }
 
-    //Part 3: for each character read, generate the next key stream elem. Xor key byte with read byte to form encrypted output. Write to output file.
+assert(sizeof(S)>=256); 
+assert(sizeof(T)>=256);
+
+    //Part 3: for each character read, generate the next key stream elem. Xor key byte   with read  byte to form encrypted output. Write to output file.
     while ((inputChar = fgetc(plainTextFile)) != EOF) {
         keyChar = generateKeyByte(S);
-        outputChar = inputChar ^ keyChar;
-        fputc(outputChar, encryptedTextFile); 
+	outputChar = inputChar ^ keyChar;
+	fputc(outputChar, encryptedTextFile);
     }
 
     fclose(plainTextFile);
     fclose(keyStreamFile);
     fclose(encryptedTextFile);
+
 }//end of main
 
-char generateKeyByte (char S[]){
+int generateKeyByte (int S[]){
     static int i = 0;
     static int j = 0;
     i = (i+1) % MAX_LENGTH; 
@@ -75,8 +82,8 @@ char generateKeyByte (char S[]){
     return S[t];
 }
 
-void swap (char * a, char * b){
-    char temp;
+void swap (int * a, int * b){
+    int temp;
     temp = *a;
     *a = *b;
     *b = temp;
