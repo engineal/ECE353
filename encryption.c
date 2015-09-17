@@ -3,7 +3,6 @@ Sarah Mangels, Matteo Puzella, Aaron Lucia
 Sept 13, 2015
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -20,10 +19,10 @@ int main(void) {
     FILE *encryptedTextFile;
     int inputChar;
     int outputChar;
-    int keyChar; 
+    int keyChar;
     int kLength = 0;
-   int key[MAX_LENGTH];
-   int S[MAX_LENGTH];
+    int key[MAX_LENGTH];
+    int S[MAX_LENGTH];
     int T[MAX_LENGTH];
 
     plainTextFile = fopen("./plainText.txt", "r");
@@ -41,35 +40,37 @@ int main(void) {
     }
 
     //fill in S, T
-    for (int i = 0; i < MAX_LENGTH; i++){
+    int i;
+    for (i = 0; i < MAX_LENGTH; i++){
         S[i] = i; 
         T[i] = key[i % kLength];
     }
 
     //initial permutation
-    int j =0; 
-    for (int i =0; i< MAX_LENGTH; i++){
+    int j = 0;
+    for (i = 0; i< MAX_LENGTH; i++){
         j = (j+S[i]+T[i]) % MAX_LENGTH; 
 
-	assert(&S[i] != NULL); 
-
+        assert(&S[i] != NULL); 
         swap (&S[i], &S[j]);
     }
 
-assert(sizeof(S)>=256); 
-assert(sizeof(T)>=256);
+    assert(sizeof(S)>=256); 
+    assert(sizeof(T)>=256);
 
     //Part 3: for each character read, generate the next key stream elem. Xor key byte   with read  byte to form encrypted output. Write to output file.
     while ((inputChar = fgetc(plainTextFile)) != EOF) {
         keyChar = generateKeyByte(S);
-	outputChar = inputChar ^ keyChar;
-	fputc(outputChar, encryptedTextFile);
+        outputChar = inputChar ^ keyChar;
+        fputc(outputChar, encryptedTextFile);
+        if (outputChar == EOF) {
+            
+        }
     }
 
     fclose(plainTextFile);
     fclose(keyStreamFile);
     fclose(encryptedTextFile);
-
 }//end of main
 
 int generateKeyByte (int S[]){
