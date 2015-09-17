@@ -47,9 +47,9 @@ int main(void) {
     }
 
     //initial permutation
-    int j =0; 
-    for (int i =0; i< MAX_LENGTH; i++){
-        j = (j+S[i]+T[i]) % MAX_LENGTH; 
+    int j = 0; 
+    for (int i = 0; i < MAX_LENGTH; i++){
+        j = (j + S[i] + T[i]) % MAX_LENGTH;
         swap (&S[i], &S[j]);
     }
 
@@ -59,7 +59,7 @@ int main(void) {
         outputChar = inputChar ^ keyChar;
         fputc(outputChar, encryptedTextFile);
         if (outputChar == EOF) {
-            printf("Woops! %d, ", outputChar);
+            printf("Woops! %d ^ %d = %d", inputChar, keyChar, outputChar);
         }
     }
 
@@ -71,10 +71,10 @@ int main(void) {
 char generateKeyByte (char S[]){
     static int i = 0;
     static int j = 0;
-    i = (i+1) % MAX_LENGTH;
-    j = (j+S[i]) % MAX_LENGTH;
+    i = (i + 1) % MAX_LENGTH;
+    j = (j + S[i]) % MAX_LENGTH;
     swap (&S[i], &S[j]);
-    int t = (S[i]+S[j]) % MAX_LENGTH;
+    int t = (S[i] + S[j]) % MAX_LENGTH;
     return S[t];
 }
 
