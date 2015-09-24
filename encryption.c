@@ -11,20 +11,20 @@ Sept 13, 2015
 
 #define MAX_LENGTH 256
 
-void swap (char *, char *);
-char generateKeyByte (char []);
+void swap (int *, int *);
+int generateKeyByte (int []);
 
 int main(void) {
     FILE *plainTextFile;
     FILE *keyStreamFile;
     FILE *encryptedTextFile;
-    char inputChar;
-    char keyChar;
-    char outputChar;
+    int inputChar;
+    int keyChar;
+    int outputChar;
     int kLength = 0;
-    char key[MAX_LENGTH];
-    char S[MAX_LENGTH];
-    char T[MAX_LENGTH];
+    int key[MAX_LENGTH];
+    int S[MAX_LENGTH];
+    int T[MAX_LENGTH];
 
     plainTextFile = fopen("./plainText.txt", "r");
     keyStreamFile = fopen("./keyFile.txt", "r"); 
@@ -41,26 +41,29 @@ int main(void) {
     }
 
     //fill in S, T
-    for (int i = 0; i < MAX_LENGTH; i++){
+    int i;
+    for (i = 0; i < MAX_LENGTH; i++){
         S[i] = i; 
         T[i] = key[i % kLength];
     }
 
     //initial permutation
-    int j = 0; 
-    for (int i = 0; i < MAX_LENGTH; i++){
+    int j = 0;
+    for (i = 0; i < MAX_LENGTH; i++){
         j = (j + S[i] + T[i]) % MAX_LENGTH;
+
+        assert(&S[i] != NULL); 
         swap (&S[i], &S[j]);
     }
 
-    //Part 3: for each character read, generate the next key stream elem. Xor key byte with read byte to form encrypted output. Write to output file.
+    assert(sizeof(S)>=256); 
+    assert(sizeof(T)>=256);
+
+    //Part 3: for each character read, generate the next key stream elem. Xor key byte   with read  byte to form encrypted output. Write to output file.
     while ((inputChar = fgetc(plainTextFile)) != EOF) {
         keyChar = generateKeyByte(S);
         outputChar = inputChar ^ keyChar;
         fputc(outputChar, encryptedTextFile);
-        if (outputChar == EOF) {
-            printf("Woops! %d ^ %d = %d", inputChar, keyChar, outputChar);
-        }
     }
 
     fclose(plainTextFile);
@@ -68,7 +71,7 @@ int main(void) {
     fclose(encryptedTextFile);
 } //end of main
 
-char generateKeyByte (char S[]){
+int generateKeyByte (int S[]){
     static int i = 0;
     static int j = 0;
     i = (i + 1) % MAX_LENGTH;
@@ -78,11 +81,10 @@ char generateKeyByte (char S[]){
     return S[t];
 }
 
-void swap (char * a, char * b){
+void swap (int * a, int * b){
     assert(a != NULL);
     assert(b != NULL);
-    char temp;
-    temp = *a;
+    int temp = *a;
     *a = *b;
     *b = temp;
 }
