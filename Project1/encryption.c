@@ -1,7 +1,8 @@
-/*ECE 353 Lab 0: Encryption and Decryption
-Sarah Mangels, Matteo Puzella, Aaron Lucia
-Sept 13, 2015
-*/
+/**
+ * ECE 353 Lab 0: Encryption and Decryption
+ * Sarah Mangels, Matteo Puzella, Aaron Lucia
+ * Sept 13, 2015
+ */
 
 
 #include <stdio.h>
