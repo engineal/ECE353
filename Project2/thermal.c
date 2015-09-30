@@ -13,6 +13,38 @@ double test(double, double);
 double rk(double, double, double, double (*)(double, double));
 
 int main(int argc, char *argv[]) {
+    FILE *paramFile;
+    FILE *powerTraceFile;
+    FILE *outputFile;
+    
+    assert(argc >= 3);
+    
+    char* paramFileName = argv[0];
+    char* powerTraceFileName = argv[1];
+    if (argc == 3) {
+        char* outputFileName = argv[2];
+    } else {
+        double ambient = argv[2]
+        char* outputFileName = argv[3];
+    }
+    
+    paramFile = fopen("./powerTrace.txt", "r");
+    powerTraceFile = fopen("./powerTrace.txt", "r");
+    outputFile = fopen("./tempOutput.txt", "w");
+    
+    assert(paramFile != NULL);
+    assert(powerTraceFile != NULL);
+    assert(outputFile != NULL);
+    
+    char inputChar;
+    while ((inputChar = fgetc(powerTraceFile)) != EOF) {
+        
+    }
+
+    fclose(paramFile);
+    fclose(powerTraceFile);
+    fclose(outputFile);
+    
     int i;
     double h = 0.01;
     double x = 0.0;
