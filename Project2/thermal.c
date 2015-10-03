@@ -47,27 +47,21 @@ int main(int argc, char *argv[]) {
     
     char *line = malloc(sizeof(char) * 136);
     assert(fgets(line, 136, paramFile) != NULL);
-    printf("%s", line);
     assert(sscanf(line, "%lf%lf%lf%lf", &c[0], &c[1], &c[2], &c[3]) == 4);
-    printf("%f %f %f %f\n\n", &c[0], &c[1], &c[2], &c[3]);
     int i;
     for (i = 0; i < 4; i++) {
         assert(fgets(line, 136, paramFile) != NULL);
-        printf("%s", line);
         assert(sscanf(line, "%lf%lf%lf%lf", &r[i][0], &r[i][1], &r[i][2], &r[i][3]) == 4);
-        printf("%f %f %f %f\n\n", &r[i][0], &r[i][1], &r[i][2], &r[i][3]);
     }
     
-    //printParams();
+    printParams();
     
     double x = 0.0;
     double y[] = {ambient, ambient, ambient, ambient};
     double prevt;
     while (fgets(line, 136, powerTraceFile) != NULL) {
         double t;
-        printf("%s", line);
         assert(sscanf(line, "%lf%lf%lf%lf%lf", &t, &w[0], &w[1], &w[2], &w[3]) == 5);
-        printf("%f %f %f %f %f\n\n", t, w[0], w[1], w[2], w[3]);
         double h = t - prevt;
         prevt = t;
         rk(h, x, y);
@@ -150,9 +144,9 @@ double *rk(double h, double x_n, double y_n[]) {
 }
 
 void printParams() {
-    printf("C: %f %f %f %f\n", &c[0], &c[1], &c[2], &c[3]);
+    printf("C: %f %f %f %f\n", c[0], c[1], c[2], c[3]);
     int i;
     for (i = 0; i < 4; i++) {
-        printf("R: %f %f %f %f\n", &r[i][0], &r[i][1], &r[i][2], &r[i][3]);
+        printf("R: %f %f %f %f\n", r[i][0], r[i][1], r[i][2], r[i][3]);
     }
 }
