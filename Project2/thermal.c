@@ -9,9 +9,15 @@
 #include <math.h>
 #include <assert.h>
 
-void usage(int argc, char *argv[]);
-double *f(double, double[], double[]);
-double *rk(double, double[], double[]);
+#define k 8.617e-5
+#define Ea 0.8
+
+typedef double *(*func)(double, double[], double[]);
+
+void usage(int, char*[]);
+double *temp(double, double[], double[]);
+double *age(double, double[], double[]);
+double *rk(double, double[], double[], func);
 void printParams();
 
 double h = 0.005;
@@ -57,17 +63,21 @@ int main(int argc, char *argv[]) {
     printParams();
     
     double x = 0.0;
-    double y[] = {ambient, ambient, ambient, ambient, ambient};
+    double coretemp[] = {ambient, ambient, ambient, ambient, ambient};
+    double coreage[] = {0, 0, 0, 0, 0};
     
     while (fgets(line, 136, powerTraceFile) != NULL) {
         double t;
         double w[4];
         assert(sscanf(line, "%lf%lf%lf%lf%lf", &t, &w[0], &w[1], &w[2], &w[3]) == 5);
         while (x < t) {
-            rk(x, y, w);
-            fprintf(outputFile, "%f %f %f %f\n", y[0], y[1], y[2], y[3]);
+            rk(x, coretemp, w, temp);
+            rk(x, coreage, coretemp, age);
             x += h;
         }
+        
+        fprintf(outputFile, "%f %f %f %f %f %f %f %f %f\n", t, coretemp[0], coreage[0],
+            coretemp[1], coreage[1], coretemp[2], coreage[2], coretemp[3], coreage[3]);
     }
     
     free(line);
@@ -77,12 +87,19 @@ int main(int argc, char *argv[]) {
     fclose(outputFile);
 }
 
+
+/**
+ * Prints out helpful information if there are incorect arguments
+ */
 void usage(int argc, char *argv[]) {
     printf("Usage: %s takes 3 or 4 arguments, you provided %d\n", argv[0], argc - 1);
     printf("%s paramFile powerFile optionalAmbientInput outputFile\n", argv[0]);
 }
 
-double *f(double x, double y[], double w[]) {
+/**
+ * Calculate the temperature of each core
+ */
+double *temp(double x, double y[], double w[]) {
     double *result = malloc(sizeof(double) * 4);
     
     int i;
@@ -103,33 +120,48 @@ double *f(double x, double y[], double w[]) {
 }
 
 /**
+ * Calculate the age of each core
+ */
+double *age(double x, double y[], double t[]) {
+    double *result = malloc(sizeof(double) * 4);
+    
+    int i;
+    for (i = 0; i < 4; i++) {
+        result[i] = exp(-Ea/(k*t[i])) / exp(-Ea/(k*t[4]));
+    }
+    
+    return result;
+}
+
+/**
  * Runge-Kutta algorithm
  *
  * @param x_n previous x
  * @param y_n previous ys
+ * @param f the function to run Runge-Kutta on
  * @returns y(t+h)
  */
-double *rk(double x_n, double y_n[], double w[]) {
+double *rk(double x_n, double y_n[], double extra[], func f) {
     int i;
-    double *k1 = f(x_n, y_n, w);
+    double *k1 = f(x_n, y_n, extra);
     for (i = 0; i < 4; i++) {
         k1[i] *= h;
     }
     
     double ya[] = {y_n[0] + k1[0] / 2, y_n[1] + k1[1] / 2, y_n[2] + k1[2] / 2, y_n[3] + k1[3] / 2, y_n[4]};
-    double *k2 = f(x_n + h / 2, ya, w);
+    double *k2 = f(x_n + h / 2, ya, extra);
     for (i = 0; i < 4; i++) {
         k2[i] *= h;
     }
     
     double yb[] = {y_n[0] + k2[0] / 2, y_n[1] + k2[1] / 2, y_n[2] + k2[2] / 2, y_n[3] + k2[3] / 2, y_n[4]};
-    double *k3 = f(x_n + h / 2, yb, w);
+    double *k3 = f(x_n + h / 2, yb, extra);
     for (i = 0; i < 4; i++) {
         k3[i] *= h;
     }
     
     double yc[] = {y_n[0] + k3[0], y_n[1] + k3[1], y_n[2] + k3[2], y_n[3] + k3[3], y_n[4]};
-    double *k4 = f(x_n + h, yc, w);
+    double *k4 = f(x_n + h, yc, extra);
     for (i = 0; i < 4; i++) {
         k4[i] *= h;
     }
@@ -146,6 +178,9 @@ double *rk(double x_n, double y_n[], double w[]) {
     return y_n;
 }
 
+/**
+ * Provide helpful debug information
+ */
 void printParams() {
     printf("h: %f\n", h);
     printf("C: %f %f %f %f\n", c[0], c[1], c[2], c[3]);
