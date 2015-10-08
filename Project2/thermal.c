@@ -12,6 +12,8 @@
 #define k 8.617e-5
 #define Ea 0.8
 
+//#define DEBUG
+
 typedef double *(*func)(double, double[], double[]);
 
 void usage(int, char*[]);
@@ -60,7 +62,9 @@ int main(int argc, char *argv[]) {
         assert(sscanf(line, "%lf%lf%lf%lf", &r[0][j], &r[1][j], &r[2][j], &r[3][j]) == 4);
     }
     
-    printParams();
+    #ifdef DEBUG
+        printParams();
+    #endif
     
     double x = 0.0;
     double coretemp[] = {ambient, ambient, ambient, ambient, ambient};
