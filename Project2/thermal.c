@@ -36,15 +36,18 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
+    // Parse command line arguments
     char* paramFileName = argv[1];
     char* powerTraceFileName = argv[2];
     char* outputFileName = argv[3];
     double ambient = 300;
+    // Check if ambient temp is provided
     if (argc > 4) {
         ambient = strtod(argv[3], NULL);
         outputFileName = argv[4];
     }
     
+    // Open files
     paramFile = fopen(paramFileName, "r");
     powerTraceFile = fopen(powerTraceFileName, "r");
     outputFile = fopen(outputFileName, "w");
@@ -53,9 +56,12 @@ int main(int argc, char *argv[]) {
     assert(powerTraceFile != NULL);
     assert(outputFile != NULL);
     
+    // Read first line from paramFile into c array
     char *line = malloc(sizeof(char) * 136);
     assert(fgets(line, 136, paramFile) != NULL);
     assert(sscanf(line, "%lf%lf%lf%lf", &c[0], &c[1], &c[2], &c[3]) == 4);
+    
+    // Read next 5 lines from paramFile into r array
     int j;
     for (j = 0; j < 5; j++) {
         assert(fgets(line, 136, paramFile) != NULL);
@@ -63,16 +69,17 @@ int main(int argc, char *argv[]) {
     }
     
     #ifdef DEBUG
-        printParams();
+    printParams();
     #endif
     
-    double x = 0.0;
-    double coretemp[] = {ambient, ambient, ambient, ambient, ambient};
-    double coreage[] = {0, 0, 0, 0, 0};
+    double x = 0.0; // current time
+    double coretemp[] = {ambient, ambient, ambient, ambient, ambient}; // temp for each core and then ambient
+    double coreage[] = {0, 0, 0, 0, 0}; // age for each core, index 4 doesn't do anything
     
+    // Read each line from the powerTraceFile
     while (fgets(line, 136, powerTraceFile) != NULL) {
-        double t;
-        double w[4];
+        double t; // time read from file, goto this time
+        double w[4]; // power read from file
         assert(sscanf(line, "%lf%lf%lf%lf%lf", &t, &w[0], &w[1], &w[2], &w[3]) == 5);
         while (x < t) {
             rk(x, coretemp, w, temp);
@@ -102,6 +109,10 @@ void usage(int argc, char *argv[]) {
 
 /**
  * Calculate the temperature of each core
+ *
+ * @param x the time (not used)
+ * @param y the temperature of each core
+ * @param w the power consumed by each core
  */
 double *temp(double x, double y[], double w[]) {
     double *result = malloc(sizeof(double) * 4);
@@ -125,6 +136,10 @@ double *temp(double x, double y[], double w[]) {
 
 /**
  * Calculate the age of each core
+ *
+ * @param x the time (not used)
+ * @param y the age of each core (not used)
+ * @param t the temperature of each core
  */
 double *age(double x, double y[], double t[]) {
     double *result = malloc(sizeof(double) * 4);
@@ -140,8 +155,9 @@ double *age(double x, double y[], double t[]) {
 /**
  * Runge-Kutta algorithm
  *
- * @param x_n previous x
- * @param y_n previous ys
+ * @param x_n previous x (time)
+ * @param y_n previous ys (temp or age)
+ * @param extra (power or temp)
  * @param f the function to run Runge-Kutta on
  * @returns y(t+h)
  */
@@ -152,24 +168,25 @@ double *rk(double x_n, double y_n[], double extra[], func f) {
         k1[i] *= h;
     }
     
-    double ya[] = {y_n[0] + k1[0] / 2, y_n[1] + k1[1] / 2, y_n[2] + k1[2] / 2, y_n[3] + k1[3] / 2, y_n[4]};
+    double ya[] = {y_n[0] + k1[0] / 2, y_n[1] + k1[1] / 2, y_n[2] + k1[2] / 2, y_n[3] + k1[3] / 2, y_n[4]}; // all the y values to calculate k2
     double *k2 = f(x_n + h / 2, ya, extra);
     for (i = 0; i < 4; i++) {
         k2[i] *= h;
     }
     
-    double yb[] = {y_n[0] + k2[0] / 2, y_n[1] + k2[1] / 2, y_n[2] + k2[2] / 2, y_n[3] + k2[3] / 2, y_n[4]};
+    double yb[] = {y_n[0] + k2[0] / 2, y_n[1] + k2[1] / 2, y_n[2] + k2[2] / 2, y_n[3] + k2[3] / 2, y_n[4]}; // all the y values to calculate k3
     double *k3 = f(x_n + h / 2, yb, extra);
     for (i = 0; i < 4; i++) {
         k3[i] *= h;
     }
     
-    double yc[] = {y_n[0] + k3[0], y_n[1] + k3[1], y_n[2] + k3[2], y_n[3] + k3[3], y_n[4]};
+    double yc[] = {y_n[0] + k3[0], y_n[1] + k3[1], y_n[2] + k3[2], y_n[3] + k3[3], y_n[4]}; // all the y values to calculate k4
     double *k4 = f(x_n + h, yc, extra);
     for (i = 0; i < 4; i++) {
         k4[i] *= h;
     }
     
+    // Add slope to previous value to calculate next value
     for (i = 0; i < 4; i++) {
         y_n[i] += (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) / 6;
     }
@@ -183,7 +200,7 @@ double *rk(double x_n, double y_n[], double extra[], func f) {
 }
 
 /**
- * Provide helpful debug information
+ * Print out the h, r, and c values
  */
 void printParams() {
     printf("h: %f\n", h);
