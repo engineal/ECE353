@@ -98,7 +98,6 @@ int main(int argc, char *argv[]) {
     fclose(outputFile);
 }
 
-
 /**
  * Prints out helpful information if there are incorect arguments
  */
