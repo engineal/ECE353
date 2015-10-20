@@ -69,4 +69,15 @@ main (int argc, char *argv[]){
 	}
 	
 	//start your code from here
+
+	//File read
+	char *line = malloc(sizeof(char) * 136);
+	while (fgets(line, 100, input) != NULL){
+		token = strtok(line, “ ,;)”);
+		while (token != NULL){
+			
+			token = strtok(NULL, “,;)”);
+		}
+		
+	}
 }

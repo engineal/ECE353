@@ -1,6 +1,6 @@
-enum Opcode {
-    add, sub, mul;
-};
+typedef enum {
+    add, sub, addi, mul, lw, sw, beq
+} Opcode ;
 
 struct Instruction {
     Opcode opcode;
@@ -8,6 +8,11 @@ struct Instruction {
     int rt;
     int rd;
 };
+
+struct Registers {
+	int reg; 
+	boolean flag;
+}; 
 
 int PC;
 
