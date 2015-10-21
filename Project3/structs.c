@@ -1,5 +1,5 @@
 enum Opcode {
-    add, sub, mul;
+    add, sub, mul, sw, lw;
 };
 
 struct Instruction {

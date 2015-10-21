@@ -1,0 +1,2 @@
+int running;
+while (running)
