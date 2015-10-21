@@ -78,6 +78,8 @@ main (int argc, char *argv[]){
 			
 			token = strtok(NULL, “,;)”);
 		}
+	
+
 		
 	}
-}
+} // end main

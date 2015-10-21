@@ -4,14 +4,14 @@ typedef enum {
 
 struct Instruction {
     Opcode opcode;
-    int rs;
-    int rt;
-    int rd;
+    struct Register rs;
+    struct Register rt;
+    struct Register rd;
 };
 
-struct Registers {
-	int reg; 
-	boolean flag;
+struct Register {
+	int value; 
+	boolean flag; // if flag == true, the register is being edited
 }; 
 
 int PC;
