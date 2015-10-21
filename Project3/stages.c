@@ -1,4 +1,4 @@
-struct LatchC exe(struct LatchB *state) {
+struct LatchC *execute(struct LatchB *state) {
     int aluResult = 0;
     switch (state->opcode) {
     case add:
@@ -23,7 +23,7 @@ struct LatchC exe(struct LatchB *state) {
 
 int *dataMem = malloc(sizeof(int) * 64);
 
-struct LatchD mem(struct LatchC *state) {
+struct LatchD *memory(struct LatchC *state) {
     int memResult = 0;
     switch (state->opcode) {
     case sw:
