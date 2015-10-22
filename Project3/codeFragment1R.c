@@ -74,9 +74,13 @@ main (int argc, char *argv[]){
 	char *line = malloc(sizeof(char) * 136);
 	while (fgets(line, 100, input) != NULL){
 		token = strtok(line, “ ,;)”);
+		char* tokens[6]; 
+		int i = 0;
 		while (token != NULL){
 			
-			token = strtok(NULL, “,;)”);
+			token = strtok(NULL, “ ,;)”);
+			tokens[i]=token;
+			i++; 
 		}
 	
 
