@@ -10,11 +10,16 @@ struct LatchC *execute(struct LatchB *state) {
     case mul:
         aluResult = state->reg1 * state->reg2;
         break;
+    case sw:
+    case lw:
+        aluResult = state->reg1 + state->immediate;
+        break;
     }
     
     struct LatchC *result = malloc(sizeof(struct LatchC));
     result->opcode = state->opcode;
     result->rd = state->rd;
+    result->reg2 = state->reg2;
     result->result = aluResult;
     result->ready = true;
     
@@ -27,7 +32,7 @@ struct LatchD *memory(struct LatchC *state) {
     int memResult = 0;
     switch (state->opcode) {
     case sw:
-        dataMem[state->result] = 0;
+        dataMem[state->result] = state->reg2;
         break;
     case lw:
         memResult = dataMem[state->result];
