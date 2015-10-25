@@ -4,6 +4,9 @@ struct Register registers[32];
 int *dataMem = malloc(sizeof(int) * 64);
 
 // IF
+void IF{
+LatchA.instruction = instructions[pc];
+}
 
 // ID
 void ID(){
@@ -102,3 +105,6 @@ struct LatchD *memory(struct LatchC *state) {
 }
 
 // WB
+void WB {
+    registers[LatchD.rd] =LatchD.result ;
+}
