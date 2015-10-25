@@ -3,16 +3,20 @@
 // List the full names of ALL group members at the top of your code.
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 
-#include structs.c
-#include stages.c
+#include "structs.c"
+#include "stages.c"
 //feel free to add here any additional library names you may need 
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
+
+struct Instruction *arrayToInstruction(char* tokens[]);
+
 main (int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
@@ -75,16 +79,16 @@ main (int argc, char *argv[]){
 	//File read
 	char *line = malloc(sizeof(char) * 136);
 	while (fgets(line, 100, input) != NULL){
-		token = strtok(line, “ ,;)”);
-		char* tokens[6]; 
-		int i = 0;
-		while (token != NULL){ //puts tokens into array, to be put into an strct Instruciton
-			token = strtok(NULL, “ ,;)”);
-			tokens[i]=token;
-			i++; 
+		char *tokens[6]; 
+		char *token = strtok(line, " ,;)");
+        tokens[0] = token;
+		int i = 1;
+		while (token != NULL) { //puts tokens into array, to be put into an strct Instruciton
+			token = strtok(NULL, " ,;)");
+			tokens[i++]=token;
 		}
 
-		inst = arrayToInstruction(tokens);
+		struct Instruction *inst = arrayToInstruction(tokens);
 	}
     
     struct LatchA *stateA = malloc(sizeof(struct LatchA));
@@ -110,32 +114,36 @@ main (int argc, char *argv[]){
 
 
 //takes in the tokens of an instruction as an array, returns a struct Instruction
-struct Instruction arrayToInstruction(char* tokens[]){
-	struct Instruction a; 
-	a.opcode = char* tokens[0]; //might not work
+struct Instruction *arrayToInstruction(char* tokens[]){
+	struct Instruction *a = malloc(sizeof(struct Instruciton));
 
-	switch(a.opcode){
-		case add:
+	switch(tokens[0]){
+		case "add":
+            a.opcode = add;
 			a.rd = tokens[1]; 
 			a.rs = tokens[2]; 
 			a.rt = tokens[3];
-		case sub: 
-			a.rd = tokens[1]; 
+		case "sub": 
+            a.opcode = sub;
+            a.rd = tokens[1]; 
 			a.rs = tokens[2]; 
 			a.rt = tokens[3];
-		case addi:
-
-		case mul:
-			a.rd = tokens[1]; 
+		case "addi":
+            a.opcode = addi;
+		case "mul":
+            a.opcode = mul;
+            a.rd = tokens[1]; 
 			a.rs = tokens[2]; 
 			a.rt = tokens[3];
-		case lw:
-
-		case sw:
-
-		case beq:
+		case "lw":
+            a.opcode = lw;
+		case "sw":
+            a.opcode = sw;
+		case "beq":
+            a.opcode = beq;
 	}
-
+    
+    return a;
 }
 
 //takes in register string returns register number, to be used as index for registers[] array

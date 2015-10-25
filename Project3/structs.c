@@ -15,12 +15,12 @@ struct Instruction {
 
 struct Register {
 	int value; 
-	boolean flag; // if flag == true, the register is safe
+	bool flag; // if flag == true, the register is safe
 };
 
 struct LatchA {
     struct Instruction instruction;
-    boolean ready;
+    bool ready;
 };
 
 struct LatchB {
@@ -28,7 +28,8 @@ struct LatchB {
     int rd; //reg#
     int reg1; //reg value
     int reg2; //reg value
-    boolean ready;
+    int immediate;
+    bool ready;
 };
 
 struct LatchC {
@@ -36,12 +37,12 @@ struct LatchC {
     int rd;
     int reg2;
     int result;
-    boolean ready;
+    bool ready;
 };
 
 struct LatchD {
     Opcode opcode;
     int rd;
     int result;
-    boolean ready;
+    bool ready;
 };

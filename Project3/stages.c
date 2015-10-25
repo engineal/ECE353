@@ -1,24 +1,24 @@
 //Array of registers
 struct Register registers[32];
 //Instruction memory
-int *instructionMem = malloc(sizeof(int) * 64);
+struct Instruction instructionMem[64];
 //Data memory
-int *dataMem = malloc(sizeof(int) * 64);
+int dataMem[64];
 
 // IF
-stuct LatchA *instructionFetch(int pc) {
+struct LatchA *instructionFetch(int pc) {
     struct LatchA *result = malloc(sizeof(struct LatchA));
     result->instruction = instructionMem[pc];
     return result;
 }
 
 // ID
-stuct LatchB *instructionDecode(struct LatchA *state){
+struct LatchB *instructionDecode(struct LatchA *state){
     struct LatchB *result = malloc(sizeof(struct LatchB));
 	// Check that registers are unflagged
 	//flag == false, register not safe
-	if (state->instruction.rs.flag == false ||
-        state->instruction.rt.flag == false ) {
+	if (registers[state->instruction.rs].flag == false ||
+        registers[state->instruction.rt].flag == false ) {
 		
 		// send NOP add $0, $s0, $s0
 		result->opcode = add; 
@@ -30,8 +30,8 @@ stuct LatchB *instructionDecode(struct LatchA *state){
 	else{
 		result->opcode = state->instruction.opcode; 
 		result->rd = state->instruction.rd; //pass reg #
-		result->reg1 = registers[state->instruction.rs]; //pass reg value
-		result->reg2 =  registers[state->instruction.rt]; //pass reg value
+		result->reg1 = registers[state->instruction.rs].value; //pass reg value
+		result->reg2 = registers[state->instruction.rt].value; //pass reg value
 	}
     // Set LatchA ready value to…..? 
     result->ready = true;
@@ -95,7 +95,7 @@ void writeBack(struct LatchD *state) {
     case addi:
     case lw:
     case mul:
-        registers[state->rd] = state->result;
+        registers[state->rd].value = state->result;
         break;
     }
 }
