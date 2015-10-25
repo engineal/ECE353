@@ -1,6 +1,6 @@
 typedef enum {
     add, sub, addi, mul, lw, sw, beq
-} Opcode ;
+} Opcode;
 
 struct Instruction {
     Opcode opcode;
@@ -16,9 +16,7 @@ struct Instruction {
 struct Register {
 	int value; 
 	boolean flag; // if flag == true, the register is safe
-}; 
-
-int PC;
+};
 
 struct LatchA {
     struct Instruction instruction;
