@@ -76,14 +76,40 @@ main (int argc, char *argv[]){
 		token = strtok(line, “ ,;)”);
 		char* tokens[6]; 
 		int i = 0;
-		while (token != NULL){
-			
+		while (token != NULL){ //puts tokens into array, to be put into an strct Instruciton
 			token = strtok(NULL, “ ,;)”);
 			tokens[i]=token;
 			i++; 
 		}
+
+		inst = arrayToInstruction(tokens);
+
 	
 
 		
 	}
 } // end main
+
+
+//takes in the tokens of an instruction as an array, returns a struct Instruction
+struct Instruction arrayToInstruction(char* token[]){
+	struct Instruction a; 
+	a.opcode = char* token[1]; //might not work
+
+	switch(a.opcode){
+		case add:
+			
+		case sub: 
+
+		case addi:
+
+		case mul:
+
+		case lw:
+
+		case sw:
+
+		case beq:
+	}
+
+}
