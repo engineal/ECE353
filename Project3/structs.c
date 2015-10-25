@@ -7,6 +7,10 @@ struct Instruction {
     int rs;
     int rt;
     int rd;
+    int shamt;
+    int funct;
+    int immediate;
+    int address;
 };
 
 struct Registers {
@@ -32,6 +36,7 @@ struct LatchB {
 struct LatchC {
     Opcode opcode;
     int rd;
+    int reg2;
     int result;
     boolean ready;
 };
