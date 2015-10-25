@@ -7,11 +7,15 @@ struct Instruction {
     int rs;
     int rt;
     int rd;
+    int shamt;
+    int funct;
+    int immediate;
+    int address;
 };
 
-struct Registers {
-	int reg; 
-	boolean flag;
+struct Register {
+	int value; 
+	boolean flag; // if flag == true, the register is safe
 }; 
 
 int PC;
@@ -23,15 +27,16 @@ struct LatchA {
 
 struct LatchB {
     Opcode opcode;
-    int rd;
-    int reg1;
-    int reg2;
+    int rd; //reg#
+    int reg1; //reg value
+    int reg2; //reg value
     boolean ready;
 };
 
 struct LatchC {
     Opcode opcode;
     int rd;
+    int reg2;
     int result;
     boolean ready;
 };
