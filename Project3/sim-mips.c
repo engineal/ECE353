@@ -17,7 +17,7 @@
 
 struct Instruction *arrayToInstruction(char* tokens[]);
 
-main (int argc, char *argv[]){
+int main1(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
@@ -115,54 +115,65 @@ main (int argc, char *argv[]){
 
 //takes in the tokens of an instruction as an array, returns a struct Instruction
 struct Instruction *arrayToInstruction(char* tokens[]){
-	struct Instruction *a = malloc(sizeof(struct Instruciton));
+	struct Instruction *a = malloc(sizeof(struct Instruction));
 
-	switch(tokens[0]){
-		case "add":
-            a.opcode = add;
-			a.rd = tokens[1]; 
-			a.rs = tokens[2]; 
-			a.rt = tokens[3];
-		case "sub": 
-            a.opcode = sub;
-            a.rd = tokens[1]; 
-			a.rs = tokens[2]; 
-			a.rt = tokens[3];
-		case "addi":
-            a.opcode = addi;
-		case "mul":
-            a.opcode = mul;
-            a.rd = tokens[1]; 
-			a.rs = tokens[2]; 
-			a.rt = tokens[3];
-		case "lw":
-            a.opcode = lw;
-		case "sw":
-            a.opcode = sw;
-		case "beq":
-            a.opcode = beq;
-	}
+	if (strcmp(tokens[0], "add") == 0) {
+        a->opcode = add;
+        a->rd = atoi(tokens[1]);
+        a->rs = atoi(tokens[2]); 
+        a->rt = atoi(tokens[3]);
+    } else if (strcmp(tokens[0], "sub") == 0) {
+        a->opcode = sub;
+        a->rd = atoi(tokens[1]); 
+        a->rs = atoi(tokens[2]); 
+        a->rt = atoi(tokens[3]);
+    } else if (strcmp(tokens[0], "addi") == 0) {
+        a->opcode = addi;
+        a->rt = atoi(tokens[1]); 
+        a->rs = atoi(tokens[2]); 
+        a->immediate = atoi(tokens[3]);
+    } else if (strcmp(tokens[0], "mul") == 0) {
+        a->opcode = mul;
+        a->rd = atoi(tokens[1]); 
+        a->rs = atoi(tokens[2]); 
+        a->rt = atoi(tokens[3]);
+    } else if (strcmp(tokens[0], "lw") == 0) {
+        a->opcode = lw;
+        a->rt = atoi(tokens[1]); 
+        a->immediate = atoi(tokens[2]);
+        a->rs = atoi(tokens[3]);
+    } else if (strcmp(tokens[0], "sw") == 0) {
+        a->opcode = sw;
+        a->rt = atoi(tokens[1]); 
+        a->immediate = atoi(tokens[2]);
+        a->rs = atoi(tokens[3]);
+    } else if (strcmp(tokens[0], "beq") == 0) {
+        a->opcode = beq;
+        a->rs = atoi(tokens[1]); 
+        a->rt = atoi(tokens[2]); 
+        a->immediate = atoi(tokens[3]);
+    }
     
     return a;
 }
 
 //takes in register string returns register number, to be used as index for registers[] array
 int RegisterStringtoInt(char *s){
-	s =tolower(s); 
-	char* regNames = ["zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"]; 
+    int i;
+    for (i = 0; s[i]; i++) {
+        s[i] = tolower(s[i]);
+    }
+    
+	char* regNames[] = {"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
 
-	int reg; 
-	if(sscanf(s, "%d", &reg)!=1){ //if its not a string version of an integer (if it is, the int was assigned to reg)
-		for(int i = 0; i<32; i++){
-			if (strcmp(regNames[i], s) == 0) { reg = i; } //they are the same
+	int reg = -1;
+	if(sscanf(s, "%d", &reg) != 1){ //if its not a string version of an integer (if it is, the int was assigned to reg)
+		for(i = 0; i < 32; i++){
+			if (strcmp(regNames[i], s) == 0) {
+                reg = i;
+            } //they are the same
 		}
 	}
 
-	//make sure regs is within 
-	assert(reg<32); 
-	assert(reg<=0); 
-
-	return reg; 
-
-	/* to do : what if the register in invalid? ie out of 0-31 or a word etc*/	
+	return reg;
 }
