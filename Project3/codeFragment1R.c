@@ -77,7 +77,7 @@ main (int argc, char *argv[]){
 		char* tokens[6]; 
 		int i = 0;
 		while (token != NULL){ //puts tokens into array, to be put into an strct Instruciton
-			token = strtok(NULL, “ ,;)”);
+			token = strtok(NULL, “ ,;())”);
 			tokens[i]=token;
 			i++; 
 		}
@@ -101,21 +101,39 @@ struct Instruction arrayToInstruction(char* tokens[]){
 			a.rd = tokens[1]; 
 			a.rs = tokens[2]; 
 			a.rt = tokens[3];
+			break; 
 		case sub: 
 			a.rd = tokens[1]; 
 			a.rs = tokens[2]; 
 			a.rt = tokens[3];
+			break; 
 		case addi:
-
+			a.rt = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.immediate = tokens[3]; 
+			break; 
 		case mul:
 			a.rd = tokens[1]; 
 			a.rs = tokens[2]; 
 			a.rt = tokens[3];
+			break; 
 		case lw:
-
+			a.rt = tokens[1]; 
+			a.immediate = tokens[2];
+			a.rs = tokens[3]; 
+			break; 
 		case sw:
-
+			a.rt = tokens[1]; 
+			a.immediate = tokens[2];
+			a.rs = tokens[3]; 
+			break; 
 		case beq:
+			a.rs = tokens[1]; 
+			a.rt = tokens[2]; 
+			a.label = tokens[3]; 
+			break; 
 	}
+
+	return a; 
 
 }
