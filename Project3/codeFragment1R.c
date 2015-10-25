@@ -74,10 +74,48 @@ main (int argc, char *argv[]){
 	char *line = malloc(sizeof(char) * 136);
 	while (fgets(line, 100, input) != NULL){
 		token = strtok(line, “ ,;)”);
-		while (token != NULL){
-			
-			token = strtok(NULL, “,;)”);
+		char* tokens[6]; 
+		int i = 0;
+		while (token != NULL){ //puts tokens into array, to be put into an strct Instruciton
+			token = strtok(NULL, “ ,;)”);
+			tokens[i]=token;
+			i++; 
 		}
+
+		inst = arrayToInstruction(tokens);
+
+	
+
 		
 	}
+} // end main
+
+
+//takes in the tokens of an instruction as an array, returns a struct Instruction
+struct Instruction arrayToInstruction(char* tokens[]){
+	struct Instruction a; 
+	a.opcode = char* tokens[0]; //might not work
+
+	switch(a.opcode){
+		case add:
+			a.rd = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.rt = tokens[3];
+		case sub: 
+			a.rd = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.rt = tokens[3];
+		case addi:
+
+		case mul:
+			a.rd = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.rt = tokens[3];
+		case lw:
+
+		case sw:
+
+		case beq:
+	}
+
 }

@@ -26,10 +26,18 @@ void ID(){
 
 		LatchB.ready = true;  
 	}
+
+	
+}
+// EXE
 }
 
 //Array of registers
 struct Register Registers[32]; 
+
+// MEM
+
+// WB
 
 //takes in register string returns register number, to be used as index for Registers[] array
 int RegisterStringtoInt(char *s){
@@ -51,6 +59,18 @@ int RegisterStringtoInt(char *s){
 
 	/* to do : what if the register in invalid? ie out of 0-31 or a word etc*/	
 }
+
+	//make sure regs is within 
+	assert(reg<32); 
+	assert(reg<=0); 
+
+	return reg; 
+
+	/* to do : what if the register in invalid? ie out of 0-31 or a word etc*/	
+}
+
+
+
 
 // EXE
 struct LatchC *execute(struct LatchB *state) {
