@@ -1,24 +1,26 @@
 typedef enum {
     add, sub, addi, mul, lw, sw, beq
-} Opcode ;
+} Opcode;
 
 struct Instruction {
     Opcode opcode;
     int rs;
     int rt;
     int rd;
+    int shamt;
+    int funct;
+    int immediate;
+    int address;
 };
 
 struct Register {
 	int value; 
-	boolean flag; // if flag == true, the register is safe
-}; 
-
-int PC;
+	bool flag; // if flag == true, the register is safe
+};
 
 struct LatchA {
     struct Instruction instruction;
-    boolean ready;
+    bool ready;
 };
 
 struct LatchB {
@@ -26,19 +28,21 @@ struct LatchB {
     int rd; //reg#
     int reg1; //reg value
     int reg2; //reg value
-    boolean ready;
+    int immediate;
+    bool ready;
 };
 
 struct LatchC {
     Opcode opcode;
     int rd;
+    int reg2;
     int result;
-    boolean ready;
+    bool ready;
 };
 
 struct LatchD {
     Opcode opcode;
     int rd;
     int result;
-    boolean ready;
+    bool ready;
 };
