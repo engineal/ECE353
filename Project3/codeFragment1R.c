@@ -92,19 +92,25 @@ main (int argc, char *argv[]){
 
 
 //takes in the tokens of an instruction as an array, returns a struct Instruction
-struct Instruction arrayToInstruction(char* token[]){
+struct Instruction arrayToInstruction(char* tokens[]){
 	struct Instruction a; 
-	a.opcode = char* token[1]; //might not work
+	a.opcode = char* tokens[0]; //might not work
 
 	switch(a.opcode){
 		case add:
-			
+			a.rd = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.rt = tokens[3];
 		case sub: 
-
+			a.rd = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.rt = tokens[3];
 		case addi:
 
 		case mul:
-
+			a.rd = tokens[1]; 
+			a.rs = tokens[2]; 
+			a.rt = tokens[3];
 		case lw:
 
 		case sw:
