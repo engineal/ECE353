@@ -110,8 +110,8 @@ int main1(int argc, char *argv[]){
         pgm_c++;
     }
     
+    return 0;
 } // end main
-
 
 //takes in the tokens of an instruction as an array, returns a struct Instruction
 struct Instruction *arrayToInstruction(char* tokens[]){

@@ -85,6 +85,8 @@ struct LatchD *memory(struct LatchC *state) {
     result->rd = state->rd;
     result->result = memResult;
     result->ready = true;
+    
+    return result;
 }
 
 // WB
