@@ -8,6 +8,7 @@
 #include <math.h>
 #include <assert.h>
 #include <ctype.h>
+
 #include "structs.c"
 #include "stages.c"
 //feel free to add here any additional library names you may need 
@@ -160,24 +161,28 @@ struct Instruction *arrayToInstruction(char* tokens[]){
 }
 
 //takes in register string returns register number, to be used as index for registers[] array
-int RegisterStringtoInt(char *s){
+int registerStringtoInt(char *s){
     int i;
+    char regstr[strlen(s) + 1];
     for (i = 0; s[i]; i++) {
-        s[i] = tolower(s[i]);
+        regstr[i] = tolower(s[i]);
     }
-    printf("The input is %s", s); 
+    regstr[i] = s[i];
 
 	char* regNames[] = {"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
 
 	int reg = -1;
-	if(sscanf(s, "%d", &reg) != 1){ //if its not a string version of an integer (if it is, the int was assigned to reg)
+	if(sscanf(regstr, "%d", &reg) != 1){ //if its not a string version of an integer (if it is, the int was assigned to reg)
 		for(i = 0; i < 32; i++){
-			if (strcmp(regNames[i], s) == 0) {
+			if (strcmp(regNames[i], regstr + 1) == 0) {
                 reg = i;
             } //they are the same
 		}
 	}
-	printf("the register number is %d", reg); 
+    
+    if (reg == -1 && strcmp("$0", regstr) == 0) {
+        reg = 0;
+    }
 	
 	return reg;
 }
