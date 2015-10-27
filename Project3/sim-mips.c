@@ -7,7 +7,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-
+#include <ctype.h>
 #include "structs.c"
 #include "stages.c"
 //feel free to add here any additional library names you may need 
@@ -17,7 +17,7 @@
 
 struct Instruction *arrayToInstruction(char* tokens[]);
 
-int main1(int argc, char *argv[]){
+int hellomain1(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
@@ -109,6 +109,8 @@ int main1(int argc, char *argv[]){
         stateA = instructionFetch(pgm_c);
         pgm_c++;
     }
+
+    return 0; 
     
 } // end main
 
@@ -163,7 +165,8 @@ int RegisterStringtoInt(char *s){
     for (i = 0; s[i]; i++) {
         s[i] = tolower(s[i]);
     }
-    
+    printf("The input is %s", s); 
+
 	char* regNames[] = {"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
 
 	int reg = -1;
@@ -174,6 +177,7 @@ int RegisterStringtoInt(char *s){
             } //they are the same
 		}
 	}
-
+	printf("the register number is %d", reg); 
+	
 	return reg;
 }

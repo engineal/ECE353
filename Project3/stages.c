@@ -56,6 +56,8 @@ struct LatchC *execute(struct LatchB *state) {
     case lw:
         aluResult = state->reg1 + state->immediate;
         break;
+    default:
+        break;
     }
     
     struct LatchC *result = malloc(sizeof(struct LatchC));
@@ -78,6 +80,8 @@ struct LatchD *memory(struct LatchC *state) {
     case lw:
         memResult = dataMem[state->result];
         break;
+    default:
+        break;
     }
     
     struct LatchD *result = malloc(sizeof(struct LatchD));
@@ -85,6 +89,8 @@ struct LatchD *memory(struct LatchC *state) {
     result->rd = state->rd;
     result->result = memResult;
     result->ready = true;
+
+    return result;
 }
 
 // WB
@@ -96,6 +102,8 @@ void writeBack(struct LatchD *state) {
     case lw:
     case mul:
         registers[state->rd].value = state->result;
+        break;
+    default:
         break;
     }
 }
