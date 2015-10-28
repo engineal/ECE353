@@ -1,23 +1,28 @@
-boolean verifyInstruction(struct Instruction inst) {
-    boolean result = true;
-    result &&= verifyRegister(inst.rs);
-    result &&= verifyRegister(inst.rt);
-    result &&= verifyRegister(inst.rd);
+#include "structs.c"
+
+bool verifyRegister(int reg);
+bool verifyAddress(int address);
+
+bool verifyInstruction(struct Instruction *inst) {
+    bool result = true;
+    result &= verifyRegister(inst->rs);
+    result &= verifyRegister(inst->rt);
+    result &= verifyRegister(inst->rd);
     
-    switch (state->opcode) {
+    switch (inst->opcode) {
     case sw:
     case lw:
-        result &&= verifyAddress(inst.address);
+        result &= verifyAddress(inst->address);
         break;
     }
     
     return result;
 }
 
-boolean verifyRegister(int reg) {
-    return reg > 0 && reg < 32;
+bool verifyRegister(int reg) {
+    return reg >= 0 && reg < 32;
 }
 
-boolean verifyAddress(int address) {
-    return address > 0 && address < 64;
+bool verifyAddress(int address) {
+    return address >= 0 && address < 64;
 }
