@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
 	long pgm_c=0;//program counter
 	long sim_cycle=0;//simulation cycle counter
 	//define your own counter for the usage of each pipeline stage here
-    int ifUtil, idUtil, exUtil, memUtil, wbUtil;
+    double ifUtil, idUtil, exUtil, memUtil, wbUtil;
 	
 	FILE *input=NULL;
 	FILE *output=NULL;
@@ -131,8 +131,8 @@ int main(int argc, char *argv[]){
             //output code 2: the following code will output the register 
             //value to screen at every cycle and wait for the ENTER key
             //to be pressed; this will make it proceed to the next cycle 
-            printf("cycle: %d\n",sim_cycle);
-            printf("program counter: %d\n\n",pgm_c);
+            printf("cycle: %ld\n",sim_cycle);
+            printf("program counter: %ld\n\n",pgm_c);
             for (i=1;i<REG_NUM;i++){
                 printf("%2d: %d\t%s\n", i, registers[i].value, registers[i].flag ? "true" : "false");
             }
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]){
 		for (i=1;i<REG_NUM;i++){
 			fprintf(output, "%d  ", registers[i].value);
 		}
-		fprintf(output, "%d\n", pgm_c);
+		fprintf(output, "%ld\n", pgm_c);
 	}
     
 	//close input and output files at the end of the simulation

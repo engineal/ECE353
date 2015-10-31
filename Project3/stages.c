@@ -40,6 +40,8 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
         case add:
         case sub:
         case mul:
+        case beq:
+        case sw:
             readRT = true;
             break; 
         case addi:
@@ -68,6 +70,9 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
             case lw:
                 result->regResult = state->instruction.rt;
                 break;
+            default:
+                result->regResult = 0;
+                break;
         }
         
         //set write register flags to false (not safe)
@@ -91,7 +96,7 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
 
 // EXE
 bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiplyCycles, int otherCycles) {
-    printf("execute: %d\t%d\t%d\t%d\t%d\t%d\n", *pc, state->opcode, state->reg1, state->reg2, state->regResult, state->immediate);
+    printf("execute: %ld\t%d\t%d\t%d\t%d\t%d\n", *pc, state->opcode, state->reg1, state->reg2, state->regResult, state->immediate);
     if (state->cycles == 0) {
         if (state->opcode == mul) {
             state->cycles = multiplyCycles;

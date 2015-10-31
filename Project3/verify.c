@@ -12,6 +12,8 @@ bool verifyInstruction(struct Instruction *inst) {
     case lw:
         //result &= verifyAddress(inst->address);
         break;
+    default:
+        break;
     }
     
     return result;
