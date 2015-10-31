@@ -56,28 +56,23 @@ bool clockTickTest(void) {
     stateA->instruction.rs = 0; 
     stateA->instruction.rt = 0;
     stateA->instruction.rd = 0;
-    stateA->ready = true;
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
     stateB->rd = 0;
     stateB->reg1 = 0;
     stateB->reg2 = 0;
-    stateB->ready = true;
     
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
     stateC->opcode = add;
     stateC->rd = 0;
     stateC->reg2 = 0;
     stateC->result = 0;
-    stateC->ready = true;
     
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
     stateD->opcode = add;
     stateD->rd = 1;
     stateD->result = 5;
-    stateD->ready = true;
-    clockTick(&pc, stateA, stateB, stateC, stateD);
     
     for (i = 0; i < 32; i++){
         printf("%2d: %d\n", i, registers[i].value);

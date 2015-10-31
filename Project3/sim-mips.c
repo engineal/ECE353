@@ -91,9 +91,27 @@ int main1(int argc, char *argv[]){
     free(line);
     
     struct LatchA *stateA = malloc(sizeof(struct LatchA));
+    stateA->instruction.opcode = add;
+    stateA->instruction.rs = 0; 
+    stateA->instruction.rt = 0;
+    stateA->instruction.rd = 0;
+    
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
+    stateB->opcode = add;
+    stateB->rd = 0;
+    stateB->reg1 = 0;
+    stateB->reg2 = 0;
+    
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
+    stateC->opcode = add;
+    stateC->rd = 0;
+    stateC->reg2 = 0;
+    stateC->result = 0;
+    
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
+    stateD->opcode = add;
+    stateD->rd = 1;
+    stateD->result = 5;
 
     int running;
     while (running) {

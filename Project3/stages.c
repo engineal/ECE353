@@ -14,7 +14,7 @@ bool instructionFetch(int pc, struct LatchA *result) {
 // ID
 bool instructionDecode(struct LatchA *state, struct LatchB *result){
 	// Check that registers are unflagged
-	//flag == false, register not safe
+	// flag == false, register not safe
 	if (registers[state->instruction.rs].flag == false ||
         registers[state->instruction.rt].flag == false ) {
 		
@@ -38,7 +38,15 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result){
 }
 
 // EXE
-bool execute(struct LatchB *state, struct LatchC *result) {
+bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, int otherCycles) {
+    if (cycles < 0) {
+        if (state->opcode == mul) {
+            cycles = multiplyCycles;
+        } else {
+            cycles = otherCycles;
+        }
+    }
+    
     int aluResult = 0;
     switch (state->opcode) {
     case add:
@@ -56,16 +64,24 @@ bool execute(struct LatchB *state, struct LatchC *result) {
         break;
     }
     
-    result->opcode = state->opcode;
-    result->rd = state->rd;
-    result->reg2 = state->reg2;
-    result->result = aluResult;
-    
-    return true;
+    if (cycles == 0) {
+        cycles--;
+        result->opcode = state->opcode;
+        result->rd = state->rd;
+        result->reg2 = state->reg2;
+        result->result = aluResult;
+        return true;
+    } else {
+        cycles--;
+        return false;
+    }
 }
 
 // MEM
-bool memory(struct LatchC *state, struct LatchD *result) {
+bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
+    if (cycles < 0) {
+        cycles = accessCycles;
+    }
     int memResult = 0;
     switch (state->opcode) {
     case sw:
@@ -76,11 +92,16 @@ bool memory(struct LatchC *state, struct LatchD *result) {
         break;
     }
     
-    result->opcode = state->opcode;
-    result->rd = state->rd;
-    result->result = memResult;
-    
-    return true;
+    if (cycles == 0) {
+        cycles--;
+        result->opcode = state->opcode;
+        result->rd = state->rd;
+        result->result = memResult;
+        return true;
+    } else {
+        cycles--;
+        return false;
+    }
 }
 
 // WB
