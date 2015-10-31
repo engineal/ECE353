@@ -5,7 +5,6 @@
 #include <math.h>
 #include <assert.h>
 #include <ctype.h>
-#include <time.h>
 
 #include "sim-mips.c"
 
