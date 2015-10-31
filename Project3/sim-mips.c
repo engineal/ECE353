@@ -100,6 +100,7 @@ int main(int argc, char *argv[]){
     stateA->instruction.rt = 0;
     stateA->instruction.rd = 0;
     stateA->instruction.immediate = 0;
+    stateA->cycles = 0;
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
@@ -125,6 +126,7 @@ int main(int argc, char *argv[]){
         int running;
         while (running) {
             clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
+            sim_cycle+=1;
 
             //output code 2: the following code will output the register 
             //value to screen at every cycle and wait for the ENTER key
@@ -134,7 +136,6 @@ int main(int argc, char *argv[]){
             for (i=1;i<REG_NUM;i++){
                 printf("%2d: %d\t%s\n", i, registers[i].value, registers[i].flag ? "true" : "false");
             }
-            sim_cycle+=1;
             printf("press ENTER to continue\n");
             while(getchar() != '\n');
         }
@@ -252,7 +253,7 @@ int registerStringtoInt(char *s) {
 void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD, int c, int m, int n) {
     if (writeBack(stateD)) {
         if (memory(stateC, stateD, c)) {
-            if (execute(stateB, stateC, m, n)) {
+            if (execute(stateB, stateC, pc, m, n)) {
                 if (instructionDecode(stateA, stateB)) {
                     if (instructionFetch(*pc, stateA)) {
                         printf("pc++\n");

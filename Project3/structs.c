@@ -17,6 +17,8 @@ struct Register {
 
 struct LatchA {
     struct Instruction instruction;
+    
+    int cycles;
 };
 
 struct LatchB {

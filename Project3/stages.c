@@ -8,8 +8,28 @@ int dataMem[1024];
 // IF
 bool instructionFetch(int pc, struct LatchA *result) {
     printf("instructionFetch: %d\n", instructionMem[pc].opcode);
-    result->instruction = instructionMem[pc];
-    return true;
+    if (result->cycles == 0) {
+        if (instructionMem[pc].opcode == beq) {
+            result->cycles = 3;
+        } else {
+            result->cycles = 1;
+        }
+    }
+    result->cycles--;
+    if (result->cycles == 0) {
+        result->instruction = instructionMem[pc];
+        return true;
+    } else if(instructionMem[pc].opcode == beq) {
+        result->instruction = instructionMem[pc];
+        return false;
+    } else {
+        result->instruction.opcode = add;
+		result->instruction.rt = 0;
+		result->instruction.rs = 0;
+        result->instruction.rd = 0;
+        result->instruction.immediate = 0;
+        return false;
+    }
 }
 
 // ID
@@ -54,6 +74,7 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
         if (result->regResult != 0) {
             registers[result->regResult].flag = false;
         }
+        result->immediate = state->instruction.immediate;
         
         return true;
 	} else {
@@ -62,14 +83,15 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
 		result->reg1 = 0;
 		result->reg2 = 0;
         result->regResult = 0;
+        result->immediate = 0;
         
         return false;
 	}
 }
 
 // EXE
-bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, int otherCycles) {
-    printf("execute: %d\n", state->opcode);
+bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiplyCycles, int otherCycles) {
+    printf("execute: %d\t%d\t%d\t%d\t%d\t%d\n", *pc, state->opcode, state->reg1, state->reg2, state->regResult, state->immediate);
     if (state->cycles == 0) {
         if (state->opcode == mul) {
             state->cycles = multiplyCycles;
@@ -84,11 +106,13 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
         aluResult = state->reg1 + state->reg2;
         break;
     case sub:
+    case beq:
         aluResult = state->reg1 - state->reg2;
         break;
     case mul:
         aluResult = state->reg1 * state->reg2;
         break;
+    case addi:
     case sw:
     case lw:
         aluResult = state->reg1 + state->immediate;
@@ -97,6 +121,9 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
     
     state->cycles--;
     if (state->cycles == 0) {
+        if (state->opcode == beq && aluResult == 0) {
+            (*pc) += state->immediate;
+        }
         result->opcode = state->opcode;
         result->reg2 = state->reg2;
         result->regResult = state->regResult;
@@ -109,9 +136,17 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
 
 // MEM
 bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
-    printf("memory: %d\n", state->opcode);
+    printf("memory: %d\t%d\t%d\t%d\n", state->opcode, state->reg2, state->regResult, state->result);
     if (state->cycles == 0) {
-        state->cycles = accessCycles;
+        switch (state->opcode) {
+        case sw:
+        case lw:
+            state->cycles = accessCycles;
+            break;
+        default:
+            state->cycles = 1;
+            break;
+        }
     }
     int memResult = 0;
     switch (state->opcode) {
@@ -122,6 +157,7 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
         memResult = dataMem[state->result];
         break;
     default:
+        memResult = state->result;
         break;
     }
     
@@ -138,7 +174,7 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
 
 // WB
 bool writeBack(struct LatchD *state) {
-    printf("writeBack: %d\n", state->opcode);
+    printf("writeBack: %d\t%d\t%d\n", state->opcode, state->regResult, state->result);
     switch (state->opcode) {
     case add:
     case sub:

@@ -1,2 +1,3 @@
-addi $s0, $zero 10
-addi $s1, $zero 5
+addi $s0, $0, 1
+addi $s1, $0, 2
+addi $s2, $0, 3
