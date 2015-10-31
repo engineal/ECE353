@@ -158,7 +158,7 @@ int main1(int argc, char *argv[]){
 // end main
 
 //takes in the tokens of an instruction as an array, returns a struct Instruction
-struct Instruction *stringToInstruction(char* line){
+struct Instruction *stringToInstruction(char* line) {
     char *tokens[6];
     tokens[0] = strtok(line, " ,;)");
     int i = 0;
@@ -241,7 +241,7 @@ void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct La
         if (memory(stateC, stateD)) {
             if (execute(stateB, stateC)) {
                 if (instructionDecode(stateA, stateB)) {
-                    if (instructionFetch(*pc)) {
+                    if (instructionFetch(*pc, stateA)) {
                         (*pc)++;
                     }
                 }
