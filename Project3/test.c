@@ -5,17 +5,20 @@
 #include <math.h>
 #include <assert.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "sim-mips.c"
 
 bool registerStringtoIntTest(void);
 bool clockTickTest(void);
+bool stringToInstructionTest(void);
 
 int main(int argc, char *argv[]) {
     bool result = true;
     
     result &= registerStringtoIntTest();
     result &= clockTickTest();
+    result &= stringToInstructionTest();
     
     if (result) {
         printf("Passed!");
@@ -56,27 +59,23 @@ bool clockTickTest(void) {
     stateA->instruction.rs = 0; 
     stateA->instruction.rt = 0;
     stateA->instruction.rd = 0;
-    stateA->ready = true;
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
     stateB->rd = 0;
     stateB->reg1 = 0;
     stateB->reg2 = 0;
-    stateB->ready = true;
     
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
     stateC->opcode = add;
     stateC->rd = 0;
     stateC->reg2 = 0;
     stateC->result = 0;
-    stateC->ready = true;
     
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
     stateD->opcode = add;
     stateD->rd = 1;
     stateD->result = 5;
-    stateD->ready = true;
     clockTick(&pc, stateA, stateB, stateC, stateD);
     
     for (i = 0; i < 32; i++){
@@ -84,6 +83,47 @@ bool clockTickTest(void) {
     }
     
     bool pass = true;
+    
+    return pass;
+}
+
+bool stringToInstructionTest(void) {
+    printf("stringToInstruction() Test\n");
+    
+    char *input[7];
+    struct Instruction result[7];
+
+    input[0] = "add $s0 $s1 $t0";
+    result[0].opcode = add;
+    
+    input[1] = "sub $s0 $s1 $t0";
+    result[1].opcode = sub;
+    
+    input[2] = "mul $s0 $s1 $t0";
+    result[2].opcode = mul;
+
+    input[3] = "addi $s0 $s1 156";
+    result[3].opcode = addi;
+
+    input[4] = "lw $s0 $s1 156";
+    result[4].opcode = lw;
+
+    input[5] = "sw $s0 $s1 156";
+    result[5].opcode = sw;
+
+    input[6] = "beq $s0 $s1 156";
+    result[6].opcode = beq;
+
+    bool pass = true;
+    
+    int i;
+    for (i = 0; i < 1; i++) {
+        pass &= result[i].opcode == stringToInstruction(input[i])->opcode;
+        pass &= result[i].rs == stringToInstruction(input[i])->rs;
+        pass &= result[i].rt == stringToInstruction(input[i])->rt;
+        pass &= result[i].rd == stringToInstruction(input[i])->rd;
+        pass &= result[i].immediate == stringToInstruction(input[i])->immediate;
+    }
     
     return pass;
 }
