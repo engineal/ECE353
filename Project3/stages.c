@@ -33,6 +33,21 @@ struct LatchB *instructionDecode(struct LatchA *state){
 		result->reg1 = registers[state->instruction.rs].value; //pass reg value
 		result->reg2 = registers[state->instruction.rt].value; //pass reg value
 	}
+    //set write register flags to false (not safe)
+    switch (state->opcode) {
+        case add:
+        case sub:
+        case mul:
+            registers[state->instruction.rd].flag = false;
+            break; 
+        case addi:
+        case lw:
+            registers[state->instruction.rt].flag = false; 
+            break;
+        default:
+            break;
+    }
+
     // Set LatchA ready value to…..? 
     result->ready = true;
     
