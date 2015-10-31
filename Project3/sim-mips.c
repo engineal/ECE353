@@ -1,4 +1,4 @@
-// Authors: Aaron Lucia, Sarah Mangles, Matteo Puzella
+// Authors: Aaron Lucia, Sarah Mangels, Matteo Puzella
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +20,7 @@ struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
 void clockTick(long*, struct LatchA*, struct LatchB*, struct LatchC*, struct LatchD*, int, int, int);
 
-int main1(int argc, char *argv[]){
+int main(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
@@ -29,7 +29,6 @@ int main1(int argc, char *argv[]){
 	//define your own counter for the usage of each pipeline stage here
     int ifUtil, idUtil, exUtil, memUtil, wbUtil;
 	
-	int test_counter=0;
 	FILE *input=NULL;
 	FILE *output=NULL;
 	printf("The arguments are:");
@@ -79,7 +78,12 @@ int main1(int argc, char *argv[]){
 
 	//File read
 	char *line = malloc(sizeof(char) * 136);
-	while (fgets(line, 100, input) != NULL) {
+    i = 0;
+	while (fgets(line, 136, input)) {
+        char *pos;
+        if ((pos = strchr(line, '\n')) != NULL) {
+            *pos = '\0';
+        }
 		struct Instruction *inst = stringToInstruction(line);
         if (verifyInstruction(inst)) {
             instructionMem[i++] = *inst;
@@ -95,48 +99,48 @@ int main1(int argc, char *argv[]){
     stateA->instruction.rs = 0; 
     stateA->instruction.rt = 0;
     stateA->instruction.rd = 0;
+    stateA->instruction.immediate = 0;
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
     stateB->reg1 = 0;
     stateB->reg2 = 0;
     stateB->regResult = 0;
+    stateB->immediate = 0;
+    stateB->cycles = 0;
     
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
     stateC->opcode = add;
     stateC->reg2 = 0;
-    stateC->result = 0;
     stateC->regResult = 0;
+    stateC->result = 0;
+    stateC->cycles = 0;
     
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
     stateD->opcode = add;
-    stateD->result = 0;
     stateD->regResult = 0;
+    stateD->result = 0;
 
-    int running;
-    while (running) {
-        clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
-    }
-    
-    //output code 2: the following code will output the register 
-    //value to screen at every cycle and wait for the ENTER key
-    //to be pressed; this will make it proceed to the next cycle 
-	printf("cycle: %d ",sim_cycle);
-	if(sim_mode==1){
-		for (i=1;i<REG_NUM;i++){
-			printf("%d  ", registers[i].value);
-		}
-	}
-	printf("%d\n",pgm_c);
-	pgm_c+=4;
-	sim_cycle+=1;
-	test_counter++;
-	printf("press ENTER to continue\n");
-	while(getchar() != '\n');
-    
-    //add the following code to the end of the simulation, 
-    //to output statistics in batch mode
-	if(sim_mode==0){
+    if (sim_mode == SINGLE) {
+        int running;
+        while (running) {
+            clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
+
+            //output code 2: the following code will output the register 
+            //value to screen at every cycle and wait for the ENTER key
+            //to be pressed; this will make it proceed to the next cycle 
+            printf("cycle: %d\n",sim_cycle);
+            printf("program counter: %d\n\n",pgm_c);
+            for (i=1;i<REG_NUM;i++){
+                printf("%2d: %d\t%s\n", i, registers[i].value, registers[i].flag ? "true" : "false");
+            }
+            sim_cycle+=1;
+            printf("press ENTER to continue\n");
+            while(getchar() != '\n');
+        }
+    } else if (sim_mode == BATCH) {
+        //add the following code to the end of the simulation, 
+        //to output statistics in batch mode
 		fprintf(output,"program name: %s\n",argv[5]);
 		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n",
                              ifUtil, idUtil, exUtil, memUtil, wbUtil);
@@ -160,9 +164,11 @@ int main1(int argc, char *argv[]){
 //takes in the tokens of an instruction as an array, returns a struct Instruction
 struct Instruction *stringToInstruction(char* line) {
     char *tokens[6];
-    tokens[0] = strtok(line, " ,;)");
+    char* lineCopy;
+    strcpy(lineCopy, line);
+    tokens[0] = strtok(lineCopy, " ,;)");
     int i = 0;
-    while (tokens[i] != NULL && i <= 6) { //puts tokens into array, to be put into an struct Instruction
+    while (tokens[i] != NULL && i < 5) { //puts tokens into array, to be put into an struct Instruction
         tokens[++i] = strtok(NULL, " ,;)");
     }
 
@@ -170,38 +176,45 @@ struct Instruction *stringToInstruction(char* line) {
 
 	if (strcmp(tokens[0], "add") == 0) {
         a->opcode = add;
-        a->rd = registerStringtoInt(tokens[1]);
         a->rs = registerStringtoInt(tokens[2]); 
         a->rt = registerStringtoInt(tokens[3]);
+        a->rd = registerStringtoInt(tokens[1]);
+        a->immediate = 0;
     } else if (strcmp(tokens[0], "sub") == 0) {
         a->opcode = sub;
-        a->rd = registerStringtoInt(tokens[1]); 
         a->rs = registerStringtoInt(tokens[2]); 
         a->rt = registerStringtoInt(tokens[3]);
+        a->rd = registerStringtoInt(tokens[1]);
+        a->immediate = 0;
     } else if (strcmp(tokens[0], "addi") == 0) {
         a->opcode = addi;
-        a->rt = registerStringtoInt(tokens[1]); 
-        a->rs = registerStringtoInt(tokens[2]); 
+        a->rs = registerStringtoInt(tokens[2]);
+        a->rt = registerStringtoInt(tokens[1]);
+        a->rd = 0;
         a->immediate = atoi(tokens[3]);
     } else if (strcmp(tokens[0], "mul") == 0) {
         a->opcode = mul;
-        a->rd = registerStringtoInt(tokens[1]); 
         a->rs = registerStringtoInt(tokens[2]); 
         a->rt = registerStringtoInt(tokens[3]);
+        a->rd = registerStringtoInt(tokens[1]);
+        a->immediate = 0;
     } else if (strcmp(tokens[0], "lw") == 0) {
         a->opcode = lw;
-        a->rt = registerStringtoInt(tokens[1]); 
-        a->immediate = atoi(tokens[2]);
         a->rs = registerStringtoInt(tokens[3]);
+        a->rt = registerStringtoInt(tokens[1]);
+        a->rd = 0;
+        a->immediate = atoi(tokens[2]);
     } else if (strcmp(tokens[0], "sw") == 0) {
         a->opcode = sw;
-        a->rt = registerStringtoInt(tokens[1]); 
-        a->immediate = atoi(tokens[2]);
         a->rs = registerStringtoInt(tokens[3]);
+        a->rt = registerStringtoInt(tokens[1]);
+        a->rd = 0;
+        a->immediate = atoi(tokens[2]);
     } else if (strcmp(tokens[0], "beq") == 0) {
         a->opcode = beq;
-        a->rs = registerStringtoInt(tokens[1]); 
-        a->rt = registerStringtoInt(tokens[2]); 
+        a->rs = registerStringtoInt(tokens[1]);
+        a->rt = registerStringtoInt(tokens[2]);
+        a->rd = 0;
         a->immediate = atoi(tokens[3]);
     }
     
@@ -221,7 +234,7 @@ int registerStringtoInt(char *s) {
 
 	int reg = -1;
 	if(sscanf(regstr, "%d", &reg) != 1){ //if its not a string version of an integer (if it is, the int was assigned to reg)
-		for (i = 0; i < 32; i++){
+		for (i = 0; i < 32; i++) {
 			if (strcmp(regNames[i], regstr + 1) == 0) {
                 reg = i;
             } //they are the same
@@ -242,6 +255,7 @@ void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct La
             if (execute(stateB, stateC, m, n)) {
                 if (instructionDecode(stateA, stateB)) {
                     if (instructionFetch(*pc, stateA)) {
+                        printf("pc++\n");
                         (*pc)++;
                     }
                 }

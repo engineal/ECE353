@@ -7,12 +7,14 @@ int dataMem[1024];
 
 // IF
 bool instructionFetch(int pc, struct LatchA *result) {
+    printf("instructionFetch: %d\n", instructionMem[pc].opcode);
     result->instruction = instructionMem[pc];
     return true;
 }
 
 // ID
 bool instructionDecode(struct LatchA *state, struct LatchB *result) {
+    printf("instructionDecode: %d\n", state->instruction.opcode);
     bool readRT;
     switch (state->instruction.opcode) {
         case add:
@@ -28,14 +30,6 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
 	// Check that registers are unflagged
 	// flag == false, register not safe
 	if (registers[state->instruction.rs].flag && (!readRT || registers[state->instruction.rt].flag)) {
-		// send NOP add $0, $s0, $s0
-		result->opcode = add;
-		result->reg1 = 0;
-		result->reg2 = 0;
-        result->regResult = 0;
-        
-        return false;
-	} else {
         //flag == true, registers safe
 		result->opcode = state->instruction.opcode; 
 		result->reg1 = registers[state->instruction.rs].value; //pass reg value
@@ -62,12 +56,21 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
         }
         
         return true;
+	} else {
+		// send NOP add $0, $s0, $s0
+		result->opcode = add;
+		result->reg1 = 0;
+		result->reg2 = 0;
+        result->regResult = 0;
+        
+        return false;
 	}
 }
 
 // EXE
 bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, int otherCycles) {
-    if (state->cycles < 0) {
+    printf("execute: %d\n", state->opcode);
+    if (state->cycles == 0) {
         if (state->opcode == mul) {
             state->cycles = multiplyCycles;
         } else {
@@ -92,22 +95,22 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
         break;
     }
     
+    state->cycles--;
     if (state->cycles == 0) {
-        state->cycles--;
         result->opcode = state->opcode;
         result->reg2 = state->reg2;
-    result->regResult = state->regResult;
+        result->regResult = state->regResult;
         result->result = aluResult;
         return true;
     } else {
-        state->cycles--;
         return false;
     }
 }
 
 // MEM
 bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
-    if (state->cycles < 0) {
+    printf("memory: %d\n", state->opcode);
+    if (state->cycles == 0) {
         state->cycles = accessCycles;
     }
     int memResult = 0;
@@ -122,20 +125,20 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
         break;
     }
     
+    state->cycles--;
     if (state->cycles == 0) {
-        state->cycles--;
         result->opcode = state->opcode;
-    result->regResult = state->regResult;
+        result->regResult = state->regResult;
         result->result = memResult;
         return true;
     } else {
-        state->cycles--;
         return false;
     }
 }
 
 // WB
 bool writeBack(struct LatchD *state) {
+    printf("writeBack: %d\n", state->opcode);
     switch (state->opcode) {
     case add:
     case sub:

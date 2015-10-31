@@ -105,7 +105,6 @@ bool stringToInstructionTest(void) {
     result[1].rt = 8;
     result[1].rd = 16;
     result[1].immediate = 0;
-
     
     input[2] = "mul $s0 $s1 $t0";
     result[2].opcode = mul;
@@ -146,11 +145,12 @@ bool stringToInstructionTest(void) {
     
     int i;
     for (i = 0; i < 1; i++) {
-        pass &= result[i].opcode == stringToInstruction(input[i])->opcode;
-        pass &= result[i].rs == stringToInstruction(input[i])->rs;
-        pass &= result[i].rt == stringToInstruction(input[i])->rt;
-        pass &= result[i].rd == stringToInstruction(input[i])->rd;
-        pass &= result[i].immediate == stringToInstruction(input[i])->immediate;
+        struct Instruction *inst = stringToInstruction(input[i]);
+        pass &= result[i].opcode == inst->opcode;
+        pass &= result[i].rs == inst->rs;
+        pass &= result[i].rt == inst->rt;
+        pass &= result[i].rd == inst->rd;
+        pass &= result[i].immediate == inst->immediate;
     }
     
     return pass;
