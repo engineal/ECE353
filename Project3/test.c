@@ -78,7 +78,7 @@ bool clockTickTest(void) {
     stateD->result = 5;
     
     for (i = 0; i < 32; i++){
-        printf("%2d: %d\n", i, registers[i].value);
+        //printf("%2d: %d\n", i, registers[i].value);
     }
     
     bool pass = true;

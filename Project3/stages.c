@@ -39,11 +39,11 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result){
 
 // EXE
 bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, int otherCycles) {
-    if (cycles < 0) {
+    if (state->cycles < 0) {
         if (state->opcode == mul) {
-            cycles = multiplyCycles;
+            state->cycles = multiplyCycles;
         } else {
-            cycles = otherCycles;
+            state->cycles = otherCycles;
         }
     }
     
@@ -64,23 +64,23 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
         break;
     }
     
-    if (cycles == 0) {
-        cycles--;
+    if (state->cycles == 0) {
+        state->cycles--;
         result->opcode = state->opcode;
         result->rd = state->rd;
         result->reg2 = state->reg2;
         result->result = aluResult;
         return true;
     } else {
-        cycles--;
+        state->cycles--;
         return false;
     }
 }
 
 // MEM
 bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
-    if (cycles < 0) {
-        cycles = accessCycles;
+    if (state->cycles < 0) {
+        state->cycles = accessCycles;
     }
     int memResult = 0;
     switch (state->opcode) {
@@ -92,14 +92,14 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
         break;
     }
     
-    if (cycles == 0) {
-        cycles--;
+    if (state->cycles == 0) {
+        state->cycles--;
         result->opcode = state->opcode;
         result->rd = state->rd;
         result->result = memResult;
         return true;
     } else {
-        cycles--;
+        state->cycles--;
         return false;
     }
 }
