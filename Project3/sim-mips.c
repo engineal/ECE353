@@ -98,20 +98,20 @@ int main1(int argc, char *argv[]){
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
-    stateB->rd = 0;
     stateB->reg1 = 0;
     stateB->reg2 = 0;
+    stateB->regResult = 0;
     
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
     stateC->opcode = add;
-    stateC->rd = 0;
     stateC->reg2 = 0;
     stateC->result = 0;
+    stateC->regResult = 0;
     
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
     stateD->opcode = add;
-    stateD->rd = 1;
-    stateD->result = 5;
+    stateD->result = 0;
+    stateD->regResult = 0;
 
     int running;
     while (running) {
