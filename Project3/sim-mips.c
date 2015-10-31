@@ -16,9 +16,9 @@
 #define BATCH 0
 #define REG_NUM 32
 
-struct Instruction *stringToInstruction(char* line);
-int registerStringtoInt(char *s);
-void clockTick(long *, struct LatchA *, struct LatchB *, struct LatchC *, struct LatchD *);
+struct Instruction *stringToInstruction(char*);
+int registerStringtoInt(char*);
+void clockTick(long*, struct LatchA*, struct LatchB*, struct LatchC*, struct LatchD*, int, int, int);
 
 int main1(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
@@ -91,13 +91,31 @@ int main1(int argc, char *argv[]){
     free(line);
     
     struct LatchA *stateA = malloc(sizeof(struct LatchA));
+    stateA->instruction.opcode = add;
+    stateA->instruction.rs = 0; 
+    stateA->instruction.rt = 0;
+    stateA->instruction.rd = 0;
+    
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
+    stateB->opcode = add;
+    stateB->rd = 0;
+    stateB->reg1 = 0;
+    stateB->reg2 = 0;
+    
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
+    stateC->opcode = add;
+    stateC->rd = 0;
+    stateC->reg2 = 0;
+    stateC->result = 0;
+    
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
+    stateD->opcode = add;
+    stateD->rd = 1;
+    stateD->result = 5;
 
     int running;
     while (running) {
-        clockTick(&pgm_c, stateA, stateB, stateC, stateD);
+        clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
     }
     
     //output code 2: the following code will output the register 
@@ -218,10 +236,10 @@ int registerStringtoInt(char *s) {
 	return reg;
 }
 
-void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD) {
+void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD, int c, int m, int n) {
     if (writeBack(stateD)) {
-        if (memory(stateC, stateD)) {
-            if (execute(stateB, stateC)) {
+        if (memory(stateC, stateD, c)) {
+            if (execute(stateB, stateC, m, n)) {
                 if (instructionDecode(stateA, stateB)) {
                     if (instructionFetch(*pc, stateA)) {
                         (*pc)++;

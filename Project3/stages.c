@@ -66,7 +66,15 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
 }
 
 // EXE
-bool execute(struct LatchB *state, struct LatchC *result) {
+bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, int otherCycles) {
+    if (state->cycles < 0) {
+        if (state->opcode == mul) {
+            state->cycles = multiplyCycles;
+        } else {
+            state->cycles = otherCycles;
+        }
+    }
+    
     int aluResult = 0;
     switch (state->opcode) {
     case add:
@@ -84,16 +92,24 @@ bool execute(struct LatchB *state, struct LatchC *result) {
         break;
     }
     
-    result->opcode = state->opcode;
-    result->reg2 = state->reg2;
+    if (state->cycles == 0) {
+        state->cycles--;
+        result->opcode = state->opcode;
+        result->reg2 = state->reg2;
     result->regResult = state->regResult;
-    result->result = aluResult;
-    
-    return true;
+        result->result = aluResult;
+        return true;
+    } else {
+        state->cycles--;
+        return false;
+    }
 }
 
 // MEM
-bool memory(struct LatchC *state, struct LatchD *result) {
+bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
+    if (state->cycles < 0) {
+        state->cycles = accessCycles;
+    }
     int memResult = 0;
     switch (state->opcode) {
     case sw:
@@ -106,11 +122,16 @@ bool memory(struct LatchC *state, struct LatchD *result) {
         break;
     }
     
-    result->opcode = state->opcode;
+    if (state->cycles == 0) {
+        state->cycles--;
+        result->opcode = state->opcode;
     result->regResult = state->regResult;
-    result->result = memResult;
-    
-    return true;
+        result->result = memResult;
+        return true;
+    } else {
+        state->cycles--;
+        return false;
+    }
 }
 
 // WB

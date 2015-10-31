@@ -76,10 +76,9 @@ bool clockTickTest(void) {
     stateD->opcode = add;
     stateD->result = 5;
     stateD->regResult = 1;
-    clockTick(&pc, stateA, stateB, stateC, stateD);
     
     for (i = 0; i < 32; i++){
-        printf("%2d: %d\n", i, registers[i].value);
+        //printf("%2d: %d\n", i, registers[i].value);
     }
     
     bool pass = true;
