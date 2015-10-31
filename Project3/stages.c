@@ -12,26 +12,54 @@ bool instructionFetch(int pc, struct LatchA *result) {
 }
 
 // ID
-bool instructionDecode(struct LatchA *state, struct LatchB *result){
+bool instructionDecode(struct LatchA *state, struct LatchB *result) {
+    bool readRT;
+    switch (state->instruction.opcode) {
+        case add:
+        case sub:
+        case mul:
+            readRT = true;
+            break; 
+        case addi:
+        case lw:
+            readRT = false;
+            break;
+    }
 	// Check that registers are unflagged
-	//flag == false, register not safe
-	if (registers[state->instruction.rs].flag == false ||
-        registers[state->instruction.rt].flag == false ) {
-		
+	// flag == false, register not safe
+	if (registers[state->instruction.rs].flag && (!readRT || registers[state->instruction.rt].flag)) {
 		// send NOP add $0, $s0, $s0
-		result->opcode = add; 
-		result->rd = 0; 
+		result->opcode = add;
 		result->reg1 = 0;
 		result->reg2 = 0;
+        result->regResult = 0;
         
         return false;
-	}
-	//flag == true, registers safe
-	else{
+	} else {
+        //flag == true, registers safe
 		result->opcode = state->instruction.opcode; 
-		result->rd = state->instruction.rd; //pass reg #
 		result->reg1 = registers[state->instruction.rs].value; //pass reg value
-		result->reg2 = registers[state->instruction.rt].value; //pass reg value
+        if (readRT) {
+            result->reg2 = registers[state->instruction.rt].value; //pass reg value
+        } else {
+            result->reg2 = 0;
+        }
+        switch (state->instruction.opcode) {
+            case add:
+            case sub:
+            case mul:
+                result->regResult = state->instruction.rd;
+                break; 
+            case addi:
+            case lw:
+                result->regResult = state->instruction.rt;
+                break;
+        }
+        
+        //set write register flags to false (not safe)
+        if (result->regResult != 0) {
+            registers[result->regResult].flag = false;
+        }
         
         return true;
 	}
@@ -57,8 +85,8 @@ bool execute(struct LatchB *state, struct LatchC *result) {
     }
     
     result->opcode = state->opcode;
-    result->rd = state->rd;
     result->reg2 = state->reg2;
+    result->regResult = state->regResult;
     result->result = aluResult;
     
     return true;
@@ -74,10 +102,12 @@ bool memory(struct LatchC *state, struct LatchD *result) {
     case lw:
         memResult = dataMem[state->result];
         break;
+    default:
+        break;
     }
     
     result->opcode = state->opcode;
-    result->rd = state->rd;
+    result->regResult = state->regResult;
     result->result = memResult;
     
     return true;
@@ -85,16 +115,19 @@ bool memory(struct LatchC *state, struct LatchD *result) {
 
 // WB
 bool writeBack(struct LatchD *state) {
-    if (state->rd != 0) {
-        switch (state->opcode) {
-        case add:
-        case sub:
-        case addi:
-        case lw:
-        case mul:
-            registers[state->rd].value = state->result;
-            break;
+    switch (state->opcode) {
+    case add:
+    case sub:
+    case addi:
+    case lw:
+    case mul:
+        if (state->regResult != 0) {
+            registers[state->regResult].value = state->result;
+            registers[state->regResult].flag = true;
         }
+        break;
+    default:
+        break;
     }
     
     return true;

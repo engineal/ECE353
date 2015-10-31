@@ -21,9 +21,9 @@ struct LatchA {
 
 struct LatchB {
     Opcode opcode;
-    int rd; //reg#
     int reg1; //reg value
     int reg2; //reg value
+    int regResult;
     int immediate;
     
     int cycles;
@@ -31,8 +31,8 @@ struct LatchB {
 
 struct LatchC {
     Opcode opcode;
-    int rd;
     int reg2;
+    int regResult;
     int result;
     
     int cycles;
@@ -40,6 +40,6 @@ struct LatchC {
 
 struct LatchD {
     Opcode opcode;
-    int rd;
+    int regResult;
     int result;
 };
