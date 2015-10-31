@@ -219,14 +219,15 @@ int registerStringtoInt(char *s) {
 }
 
 void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD) {
-    writeBack(stateD);
-    free(stateD);
-    stateD = memory(stateC);
-    free(stateC);
-    stateC = execute(stateB);
-    free(stateB);
-    stateB = instructionDecode(stateA);
-    free(stateA);
-    stateA = instructionFetch(*pc);
-    (*pc)++;
+    if (writeBack(stateD)) {
+        if (memory(stateC, stateD)) {
+            if (execute(stateB, stateC)) {
+                if (instructionDecode(stateA, stateB)) {
+                    if (instructionFetch(*pc)) {
+                        (*pc)++;
+                    }
+                }
+            }
+        }
+    }
 }

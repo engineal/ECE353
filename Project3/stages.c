@@ -1,20 +1,18 @@
 //Array of registers
 struct Register registers[32];
 //Instruction memory
-struct Instruction instructionMem[64];
+struct Instruction instructionMem[1024];
 //Data memory
-int dataMem[64];
+int dataMem[1024];
 
 // IF
-struct LatchA *instructionFetch(int pc) {
-    struct LatchA *result = malloc(sizeof(struct LatchA));
+bool instructionFetch(int pc, struct LatchA *result) {
     result->instruction = instructionMem[pc];
-    return result;
+    return true;
 }
 
 // ID
-struct LatchB *instructionDecode(struct LatchA *state){
-    struct LatchB *result = malloc(sizeof(struct LatchB));
+bool instructionDecode(struct LatchA *state, struct LatchB *result){
 	// Check that registers are unflagged
 	//flag == false, register not safe
 	if (registers[state->instruction.rs].flag == false ||
@@ -25,6 +23,8 @@ struct LatchB *instructionDecode(struct LatchA *state){
 		result->rd = 0; 
 		result->reg1 = 0;
 		result->reg2 = 0;
+        
+        return false;
 	}
 	//flag == true, registers safe
 	else{
@@ -32,15 +32,13 @@ struct LatchB *instructionDecode(struct LatchA *state){
 		result->rd = state->instruction.rd; //pass reg #
 		result->reg1 = registers[state->instruction.rs].value; //pass reg value
 		result->reg2 = registers[state->instruction.rt].value; //pass reg value
+        
+        return true;
 	}
-    // Set LatchA ready value to…..? 
-    result->ready = true;
-    
-    return result;
 }
 
 // EXE
-struct LatchC *execute(struct LatchB *state) {
+bool execute(struct LatchB *state, struct LatchC *result) {
     int aluResult = 0;
     switch (state->opcode) {
     case add:
@@ -58,18 +56,16 @@ struct LatchC *execute(struct LatchB *state) {
         break;
     }
     
-    struct LatchC *result = malloc(sizeof(struct LatchC));
     result->opcode = state->opcode;
     result->rd = state->rd;
     result->reg2 = state->reg2;
     result->result = aluResult;
-    result->ready = true;
     
-    return result;
+    return true;
 }
 
 // MEM
-struct LatchD *memory(struct LatchC *state) {
+bool memory(struct LatchC *state, struct LatchD *result) {
     int memResult = 0;
     switch (state->opcode) {
     case sw:
@@ -80,17 +76,15 @@ struct LatchD *memory(struct LatchC *state) {
         break;
     }
     
-    struct LatchD *result = malloc(sizeof(struct LatchD));
     result->opcode = state->opcode;
     result->rd = state->rd;
     result->result = memResult;
-    result->ready = true;
     
-    return result;
+    return true;
 }
 
 // WB
-void writeBack(struct LatchD *state) {
+bool writeBack(struct LatchD *state) {
     if (state->rd != 0) {
         switch (state->opcode) {
         case add:
@@ -102,4 +96,6 @@ void writeBack(struct LatchD *state) {
             break;
         }
     }
+    
+    return true;
 }

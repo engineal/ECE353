@@ -17,7 +17,6 @@ struct Register {
 
 struct LatchA {
     struct Instruction instruction;
-    bool ready;
 };
 
 struct LatchB {
@@ -26,7 +25,8 @@ struct LatchB {
     int reg1; //reg value
     int reg2; //reg value
     int immediate;
-    bool ready;
+    
+    int cycles;
 };
 
 struct LatchC {
@@ -34,12 +34,12 @@ struct LatchC {
     int rd;
     int reg2;
     int result;
-    bool ready;
+    
+    int cycles;
 };
 
 struct LatchD {
     Opcode opcode;
     int rd;
     int result;
-    bool ready;
 };
