@@ -7,10 +7,7 @@ struct Instruction {
     int rs;
     int rt;
     int rd;
-    int shamt;
-    int funct;
     int immediate;
-    int address;
 };
 
 struct Register {

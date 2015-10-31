@@ -91,13 +91,15 @@ struct LatchD *memory(struct LatchC *state) {
 
 // WB
 void writeBack(struct LatchD *state) {
-    switch (state->opcode) {
-    case add:
-    case sub:
-    case addi:
-    case lw:
-    case mul:
-        registers[state->rd].value = state->result;
-        break;
+    if (state->rd != 0) {
+        switch (state->opcode) {
+        case add:
+        case sub:
+        case addi:
+        case lw:
+        case mul:
+            registers[state->rd].value = state->result;
+            break;
+        }
     }
 }

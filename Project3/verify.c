@@ -1,5 +1,3 @@
-#include "structs.c"
-
 bool verifyRegister(int reg);
 bool verifyAddress(int address);
 
@@ -12,7 +10,7 @@ bool verifyInstruction(struct Instruction *inst) {
     switch (inst->opcode) {
     case sw:
     case lw:
-        result &= verifyAddress(inst->address);
+        //result &= verifyAddress(inst->address);
         break;
     }
     

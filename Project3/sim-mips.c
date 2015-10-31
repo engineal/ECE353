@@ -8,8 +8,9 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "verify.c"
+#include "structs.c"
 #include "stages.c"
+#include "verify.c"
 
 #define SINGLE 1
 #define BATCH 0
@@ -141,13 +142,12 @@ int main1(int argc, char *argv[]){
 //takes in the tokens of an instruction as an array, returns a struct Instruction
 struct Instruction *stringToInstruction(char* line){
     char *tokens[6];
-    char *token = strtok(line, " ,;)");
-    tokens[0] = token;
-    int i = 1;
-    while (token != NULL && i < 6) { //puts tokens into array, to be put into an struct Instruction
-        tokens[i++] = strtok(NULL, " ,;)");
+    tokens[0] = strtok(line, " ,;)");
+    int i = 0;
+    while (tokens[i] != NULL && i <= 6) { //puts tokens into array, to be put into an struct Instruction
+        tokens[++i] = strtok(NULL, " ,;)");
     }
-        
+
 	struct Instruction *a = malloc(sizeof(struct Instruction));
 
 	if (strcmp(tokens[0], "add") == 0) {
