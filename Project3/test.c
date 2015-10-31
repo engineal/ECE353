@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <ctype.h>
 
+
 #include "sim-mips.c"
 
 bool registerStringtoIntTest(void);
@@ -90,27 +91,56 @@ bool stringToInstructionTest(void) {
     
     char *input[7];
     struct Instruction result[7];
-
+    //t0 =8, s0 = 16, s1= 17
     input[0] = "add $s0 $s1 $t0";
     result[0].opcode = add;
+    result[0].rs = 17;
+    result[0].rt = 8;
+    result[0].rd = 16;
+    result[0].immediate = 0;
     
     input[1] = "sub $s0 $s1 $t0";
     result[1].opcode = sub;
+    result[1].rs = 17;
+    result[1].rt = 8;
+    result[1].rd = 16;
+    result[1].immediate = 0;
+
     
     input[2] = "mul $s0 $s1 $t0";
     result[2].opcode = mul;
+    result[2].rs = 17;
+    result[2].rt = 8;
+    result[2].rd = 16;
+    result[2].immediate = 0;
 
     input[3] = "addi $s0 $s1 156";
     result[3].opcode = addi;
+    result[3].rs = 17;
+    result[3].rt = 8;
+    result[3].rd = 0;
+    result[3].immediate = 156;
 
-    input[4] = "lw $s0 $s1 156";
+    input[4] = "lw $t0 156";
     result[4].opcode = lw;
+    result[4].rs = 0;
+    result[4].rt = 8;
+    result[4].rd = 0;
+    result[4].immediate = 156;
 
-    input[5] = "sw $s0 $s1 156";
+    input[5] = "sw $t0 156";
     result[5].opcode = sw;
+    result[5].rs = 0;
+    result[5].rt = 8;
+    result[5].rd = 0;
+    result[5].immediate = 156;
 
     input[6] = "beq $s0 $s1 156";
     result[6].opcode = beq;
+    result[6].rs = 17;
+    result[6].rt = 8;
+    result[6].rd = 0;
+    result[6].immediate = 156;
 
     bool pass = true;
     
@@ -121,6 +151,40 @@ bool stringToInstructionTest(void) {
         pass &= result[i].rt == stringToInstruction(input[i])->rt;
         pass &= result[i].rd == stringToInstruction(input[i])->rd;
         pass &= result[i].immediate == stringToInstruction(input[i])->immediate;
+
+bool ArraytoInstructionTest(void) {
+    char *input[7];
+    struct Instruction result[7];
+
+    input[0] = "add $s0 $s1 $t0";
+    result[0].opcode = add;
+
+    input[1] = "sub $s0 $s1 $t0";
+    result[1].opcode = sub;
+    
+    input[2] = "mul $s0 $s1 $t0";
+    result[2].opcode = mul;
+
+    srand(time(NULL));
+    int r = rand();
+
+    input[3] = "addi $s0 $s1 r";
+    result[3].opcode = addi;
+
+    input[4] = "lw $s0 $s1 r";
+    result[4].opcode = lw;
+
+    input[5] = "sw $s0 $s1 r";
+    result[5].opcode = sw;
+
+    input[6] = "beq $s0 $s1 r";
+    result[6].opcode = beq;
+
+    bool pass = true;
+    
+    int i;
+    for (i = 0; i < 1; i++) {
+        pass &= (result[i] == arraytoInstruction(input[i]));
     }
     
     return pass;
