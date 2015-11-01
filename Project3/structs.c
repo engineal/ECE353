@@ -1,5 +1,5 @@
 typedef enum {
-    add, sub, addi, mul, lw, sw, beq
+    add, sub, addi, mul, lw, sw, beq, haltSimulation
 } Opcode;
 
 struct Instruction {

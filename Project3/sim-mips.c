@@ -175,6 +175,13 @@ struct Instruction *stringToInstruction(char* line) {
 
 	struct Instruction *a = malloc(sizeof(struct Instruction));
 
+
+    if (strcmp(tokens[0], "haltSimulation") == 0) {
+        a->opcode = haltSimulation;
+        a->rs = 0; 
+        a->rt = 0;
+        a->rd = 0;
+        a->immediate = 0;
 	if (strcmp(tokens[0], "add") == 0) {
         a->opcode = add;
         a->rs = registerStringtoInt(tokens[2]); 
