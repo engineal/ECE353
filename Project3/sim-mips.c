@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
 		input=fopen(argv[5],"r");
 		output=fopen(argv[6],"w");
 	} else{
-		printf("Usage: ./sim-mips -s m n c input_name output_name (single-sysle mode)\n or \n ./sim-mips -b m n c input_name  output_name(batch mode)\n");
+		printf("Usage: ./sim-mips -s m n c input_name output_name (single-cycle mode)\n or \n ./sim-mips -b m n c input_name  output_name(batch mode)\n");
 		printf("m,n,c stand for number of cycles needed by multiplication, other operation, and memory access, respectively\n");
 		exit(0);
 	}
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
         if (verifyInstruction(inst)) {
             instructionMem[i++] = *inst;
         } else {
-            printf("Instruction is not valid: %s", line);
+            printf("Instruction is not valid: %s\n", line);
             exit(0);
         }
 	}
@@ -165,12 +165,12 @@ int main(int argc, char *argv[]){
 //takes in the tokens of an instruction as an array, returns a struct Instruction
 struct Instruction *stringToInstruction(char* line) {
     char *tokens[6];
-    char* lineCopy;
+    char *lineCopy = malloc(sizeof(char) * 136);
     strcpy(lineCopy, line);
-    tokens[0] = strtok(lineCopy, " ,;)");
+    tokens[0] = strtok(lineCopy, " ,;()");
     int i = 0;
     while (tokens[i] != NULL && i < 5) { //puts tokens into array, to be put into an struct Instruction
-        tokens[++i] = strtok(NULL, " ,;)");
+        tokens[++i] = strtok(NULL, " ,;()");
     }
 
 	struct Instruction *a = malloc(sizeof(struct Instruction));
