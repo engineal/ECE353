@@ -6,15 +6,62 @@
 #include <math.h>
 #include <assert.h>
 
-#include "structs.c"
-#include "verify.c"
-
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
 
+typedef enum {
+    add, sub, addi, mul, lw, sw, beq, haltSimulation
+} Opcode;
+
+struct Instruction {
+    Opcode opcode;
+    int rs;
+    int rt;
+    int rd;
+    int immediate;
+};
+
+struct Register {
+	int value; 
+	bool flag; // if flag == true, the register is safe
+};
+
+struct LatchA {
+    struct Instruction instruction;
+};
+
+struct LatchB {
+    Opcode opcode;
+    int reg1; //reg value
+    int reg2; //reg value
+    int regResult;
+    int immediate;
+    
+    int cycles;
+};
+
+struct LatchC {
+    Opcode opcode;
+    int reg2;
+    int regResult;
+    int result;
+    
+    int cycles;
+};
+
+struct LatchD {
+    Opcode opcode;
+    int regResult;
+    int result;
+};
+
 struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
+
+bool verifyInstruction(struct Instruction*);
+bool verifyOpcode(Opcode);
+bool verifyRegister(int);
 
 bool instructionFetch(struct LatchA*);
 bool instructionDecode(struct LatchA*, struct LatchB*);
@@ -37,7 +84,7 @@ int exCounter = 0;
 int memCounter = 0;
 int wbCounter = 0;
 
-int main(int argc, char *argv[]){
+int main1(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
@@ -297,6 +344,24 @@ int registerStringtoInt(char *s) {
     }
 	
 	return reg;
+}
+
+bool verifyInstruction(struct Instruction *inst) {
+    bool result = true;
+    result &= verifyOpcode(inst->opcode);
+    result &= verifyRegister(inst->rs);
+    result &= verifyRegister(inst->rt);
+    result &= verifyRegister(inst->rd);
+    
+    return result;
+}
+
+bool verifyOpcode(Opcode code) {
+    return code >= 0 && code < 8;
+}
+
+bool verifyRegister(int reg) {
+    return reg >= 0 && reg < 32;
 }
 
 /**

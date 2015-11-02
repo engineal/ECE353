@@ -4,21 +4,28 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-#include <ctype.h>
-
 
 #include "sim-mips.c"
 
 bool registerStringtoIntTest(void);
-bool clockTickTest(void);
 bool stringToInstructionTest(void);
+bool verifyOpcodeTest(void);
+bool verifyRegisterTest(void);
+bool instructionFetchTest(void);
+bool instructionDecodeTest(void);
+bool executeTest(void);
+bool memoryTest(void);
+bool writeBackTest(void);
 
 int main(int argc, char *argv[]) {
     bool result = true;
     
     result &= registerStringtoIntTest();
-    result &= clockTickTest();
     result &= stringToInstructionTest();
+    result &= verifyOpcodeTest();
+    result &= verifyRegisterTest();
+    result &= executeTest();
+    result &= writeBackTest();
     
     if (result) {
         printf("Passed!");
@@ -41,50 +48,7 @@ bool registerStringtoIntTest(void) {
         pass &= (result[i] == r);
     }
     
-    return pass;
-}
-
-bool clockTickTest(void) {
-    printf("clockTick() Test\n");
-    
-    int i;
-    for (i = 0; i < 32; i++){
-        registers[i].value = 0;
-        registers[i].flag = true;
-    }
-    
-    long pc = 0;
-    
-    struct LatchA *stateA = malloc(sizeof(struct LatchA));
-    stateA->instruction.opcode = add;
-    stateA->instruction.rs = 0; 
-    stateA->instruction.rt = 0;
-    stateA->instruction.rd = 0;
-    
-    struct LatchB *stateB = malloc(sizeof(struct LatchB));
-    stateB->opcode = add;
-    stateB->reg1 = 0;
-    stateB->reg2 = 0;
-    stateB->regResult = 0;
-    stateB->immediate = 0;
-    
-    struct LatchC *stateC = malloc(sizeof(struct LatchC));
-    stateC->opcode = add;
-    stateC->reg2 = 0;
-    stateC->result = 0;
-    stateC->regResult = 0;
-    
-    struct LatchD *stateD = malloc(sizeof(struct LatchD));
-    stateD->opcode = add;
-    stateD->result = 5;
-    stateD->regResult = 1;
-    
-    clockTick(&pc, stateA, stateB, stateC, stateD, 1, 1, 1);
-    
-    bool pass = true;
-    
-    pass &= registers[1].value == 5;
-    
+    printf("\t%s\n\n", pass ? "true" : "false");
     return pass;
 }
 
@@ -155,5 +119,91 @@ bool stringToInstructionTest(void) {
         pass &= result[i].immediate == inst->immediate;
     }
     
+    printf("\t%s\n\n", pass ? "true" : "false");
+    return pass;
+}
+
+bool verifyOpcodeTest(void) {
+    printf("verifyOpcode() Test\n");
+	Opcode input[] = {-1, add, sub, addi, mul, lw, sw, beq, haltSimulation, 8};
+    bool result[] = {false, true, true, true, true, true, true, true, false};
+    bool pass = true;
+    
+    int i;
+    for (i = 0; i < 7; i++) {
+        bool r = verifyOpcode(input[i]);
+        printf("input: %d, expected result: %s, result: %s\n", input[i], result[i] ? "true" : "false", r ? "true" : "false");
+        pass &= (result[i] == r);
+    }
+    
+    printf("\t%s\n\n", pass ? "true" : "false");
+    return pass;
+}
+
+bool verifyRegisterTest(void) {
+    printf("verifyRegister() Test\n");
+	int input[] = {-1, 0, 1, 20, 30, 31, 32};
+    bool result[] = {false, true, true, true, true, true, false};
+    bool pass = true;
+    
+    int i;
+    for (i = 0; i < 7; i++) {
+        bool r = verifyRegister(input[i]);
+        printf("input: %d, expected result: %s, result: %s\n", input[i], result[i] ? "true" : "false", r ? "true" : "false");
+        pass &= (result[i] == r);
+    }
+    
+    printf("\t%s\n\n", pass ? "true" : "false");
+    return pass;
+}
+
+bool executeTest(void) {
+    printf("execute() Test\n");
+    int i;
+    for (i = 0; i < 32; i++){
+        registers[i].value = 0;
+        registers[i].flag = true;
+    }
+    
+    int pc = 0;
+    
+    struct LatchB *stateB = malloc(sizeof(struct LatchB));
+    stateB->opcode = add;
+    stateB->reg1 = 5;
+    stateB->reg2 = 9;
+    stateB->regResult = 2;
+    stateB->immediate = 0;
+    stateB->cycles = 0;
+
+    struct LatchC *stateC = malloc(sizeof(struct LatchC));
+    
+    execute(stateB, stateC, 1, 1);
+    
+    bool pass = true;
+    pass &= (stateC->result == 14);
+    
+    printf("\t%s\n\n", pass ? "true" : "false");
+    return pass;
+}
+
+bool writeBackTest(void) {
+    printf("writeBack() Test\n");
+    int i;
+    for (i = 0; i < 32; i++){
+        registers[i].value = 0;
+        registers[i].flag = true;
+    }
+    
+    struct LatchD *stateD = malloc(sizeof(struct LatchD));
+    stateD->opcode = add;
+    stateD->regResult = 5;
+    stateD->result = 5;
+    
+    writeBack(stateD);
+    
+    bool pass = true;
+    pass &= (registers[5].value == 5);
+    
+    printf("\t%s\n\n", pass ? "true" : "false");
     return pass;
 }
