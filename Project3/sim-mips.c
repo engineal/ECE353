@@ -58,7 +58,7 @@ struct LatchD {
 
 struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
-bool verifyInstruction(struct Instruction*);
+int verifyInstruction(struct Instruction*);
 
 bool instructionFetch(struct LatchA*);
 bool instructionDecode(struct LatchA*, struct LatchB*);
@@ -81,7 +81,7 @@ int exCounter = 0;
 int memCounter = 0;
 int wbCounter = 0;
 
-int main1(int argc, char *argv[]){
+int main(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
@@ -135,20 +135,37 @@ int main1(int argc, char *argv[]){
 	//File read
 	char *line = malloc(sizeof(char) * 136);
     i = 0;
+    bool error = false;
 	while (fgets(line, 136, input)) {
         char *pos;
         if ((pos = strchr(line, '\n')) != NULL) {
             *pos = '\0';
         }
 		struct Instruction *inst = stringToInstruction(line);
-        if (verifyInstruction(inst)) {
-            instructionMem[i++] = *inst;
-        } else {
-            printf("Instruction is not valid: %s\n", line);
-            exit(0);
+        switch (verifyInstruction(inst)) {
+        case 0:
+            instructionMem[i] = *inst;
+            break;
+        case 1:
+            fprintf(output, "Illegal opcode on line %d: %s\n", i + 1, line);
+            error = true;
+            break;
+        case 2:
+            fprintf(output, "Illegal register on line %d: %s\n", i + 1, line);
+            error = true;
+            break;
+        case 3:
+            fprintf(output, "Immediate out of bounds on line %d: %s\n", i + 1, line);
+            error = true;
+            break;
         }
+        i++;
 	}
     free(line);
+    
+    if (error) {
+        exit(0);
+    }
     
     struct LatchA *stateA = malloc(sizeof(struct LatchA));
     stateA->instruction.opcode = add;
@@ -178,12 +195,6 @@ int main1(int argc, char *argv[]){
     stateD->result = 0;
     
     while (true) {
-        printf("if:\t%d\n", pgm_c / 4 + 1);
-        printf("id:\t%d\n", stateA->instruction.opcode);
-        printf("ex:\t%d\n", stateB->opcode);
-        printf("mem:\t%d\n", stateC->opcode);
-        printf("wb:\t%d\n", stateD->opcode);
-        
         if (writeBack(stateD)) {
             if (memory(stateC, stateD, c)) {
                 if (execute(stateB, stateC, m, n)) {
@@ -343,15 +354,19 @@ int registerStringtoInt(char *s) {
 	return reg;
 }
 
-bool verifyInstruction(struct Instruction *inst) {
-    bool result = true;
-    result &= (inst->opcode >= 0 && inst->opcode < 8);
-    result &= (inst->rs >= 0 && inst->rs < 32);
-    result &= (inst->rt >= 0 && inst->rt < 32);
-    result &= (inst->rd >= 0 && inst->rd < 32);
-    result &= !(((((inst->immediate) & 0xffff8000) >> 15) + 1) & 0x1fffe);
-    
-    return result;
+int verifyInstruction(struct Instruction *inst) {
+    if (inst->opcode < 0 || inst->opcode > 7) {
+        return 1;
+    }
+    if (inst->rs < 0 || inst->rs > 31 ||
+        inst->rt < 0 || inst->rt > 31 ||
+        inst->rd < 0 || inst->rd > 31) {
+        return 2;
+    }
+    if ((((((inst->immediate) & 0xffff8000) >> 15) + 1) & 0x1fffe)) {
+        return 3;
+    }
+    return 0;
 }
 
 /**

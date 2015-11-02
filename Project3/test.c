@@ -124,13 +124,13 @@ bool stringToInstructionTest(void) {
 bool verifyInstructionTest(void) {
     printf("verifyOpcode() Test\n");
 	Opcode inputOpcodes[] = {-1, add, sub, addi, mul, lw, sw, beq, haltSimulation, 8};
-    bool resultOpcodes[] = {false, true, true, true, true, true, true, true, true, false};
+    int resultOpcodes[] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
     
 	int inputRegisters[] = {-1, 0, 1, 20, 30, 31, 32};
-    bool resultRegisters[] = {false, true, true, true, true, true, false};
+    int resultRegisters[] = {2, 0, 0, 0, 0, 0, 2};
     
 	int inputImmediate[] = {-32769, -32768, -32767, 0, 32766, 32767, 32768};
-    bool resultImmediate[] = {false, true, true, true, true, true, false};
+    int resultImmediate[] = {3, 0, 0, 0, 0, 0, 3};
     
     bool pass = true;
     
@@ -143,8 +143,8 @@ bool verifyInstructionTest(void) {
         inst.rd = 0;
         inst.immediate = 0;
         
-        bool r = verifyInstruction(&inst);
-        printf("input: %d, expected result: %s, result: %s\n", inputOpcodes[i], resultOpcodes[i] ? "true" : "false", r ? "true" : "false");
+        int r = verifyInstruction(&inst);
+        printf("input: %d, expected result: %d, result: %d\n", inputOpcodes[i], resultOpcodes[i], r);
         pass &= (resultOpcodes[i] == r);
     }
     
@@ -156,8 +156,8 @@ bool verifyInstructionTest(void) {
         inst.rd = inputRegisters[i];
         inst.immediate = 0;
         
-        bool r = verifyInstruction(&inst);
-        printf("input: %d, expected result: %s, result: %s\n", inputRegisters[i], resultRegisters[i] ? "true" : "false", r ? "true" : "false");
+        int r = verifyInstruction(&inst);
+        printf("input: %d, expected result: %d, result: %d\n", inputRegisters[i], resultRegisters[i], r);
         pass &= (resultRegisters[i] == r);
     }
     
@@ -169,8 +169,8 @@ bool verifyInstructionTest(void) {
         inst.rd = 0;
         inst.immediate = inputImmediate[i];
         
-        bool r = verifyInstruction(&inst);
-        printf("input: %d, expected result: %s, result: %s\n", inputImmediate[i], resultImmediate[i] ? "true" : "false", r ? "true" : "false");
+        int r = verifyInstruction(&inst);
+        printf("input: %d, expected result: %d, result: %d\n", inputImmediate[i], resultImmediate[i], r);
         pass &= (resultImmediate[i] == r);
     }
     
