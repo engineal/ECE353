@@ -5,7 +5,6 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-#include <ctype.h>
 
 #include "structs.c"
 #include "verify.c"
@@ -16,14 +15,14 @@
 
 struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
-bool clockTick(long*, struct LatchA*, struct LatchB*, struct LatchC*, struct LatchD*, int, int, int);
 
-bool instructionFetch(int, struct LatchA*);
+bool instructionFetch(struct LatchA*);
 bool instructionDecode(struct LatchA*, struct LatchB*);
-bool execute(struct LatchB*, struct LatchC*, long*, int, int);
+bool execute(struct LatchB*, struct LatchC*, int, int);
 bool memory(struct LatchC*, struct LatchD*, int);
 bool writeBack(struct LatchD*);
 
+long pgm_c = 0;//program counter
 //Array of registers
 struct Register registers[REG_NUM];
 //Instruction memory
@@ -42,7 +41,6 @@ int main(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
-	long pgm_c = 0;//program counter
 	long sim_cycle = 0;//simulation cycle counter
 	
 	FILE *input=NULL;
@@ -54,10 +52,10 @@ int main(int argc, char *argv[]){
 	}
 	printf("\n");
 	if (argc==7){
-		if (strcmp("-s",argv[1])==0){
-			sim_mode=SINGLE;
-		} else if (strcmp("-b",argv[1])==0){
-			sim_mode=BATCH;
+		if (strcmp("-s", argv[1])==0){
+			sim_mode = SINGLE;
+		} else if (strcmp("-b", argv[1])==0){
+			sim_mode = BATCH;
 		} else {
 			printf("Wrong sim mode chosen\n");
 			exit(0);
@@ -114,7 +112,6 @@ int main(int argc, char *argv[]){
     stateA->instruction.rt = 0;
     stateA->instruction.rd = 0;
     stateA->instruction.immediate = 0;
-    stateA->cycles = 0;
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
@@ -137,11 +134,17 @@ int main(int argc, char *argv[]){
     stateD->result = 0;
     
     while (true) {
+        printf("if:\t%d\n", pgm_c / 4 + 1);
+        printf("id:\t%d\n", stateA->instruction.opcode);
+        printf("ex:\t%d\n", stateB->opcode);
+        printf("mem:\t%d\n", stateC->opcode);
+        printf("wb:\t%d\n", stateD->opcode);
+        
         if (writeBack(stateD)) {
             if (memory(stateC, stateD, c)) {
-                if (execute(stateB, stateC, &pgm_c, m, n)) {
+                if (execute(stateB, stateC, m, n)) {
                     if (instructionDecode(stateA, stateB)) {
-                        if (instructionFetch(pgm_c, stateA)) {
+                        if (instructionFetch(stateA)) {
                             pgm_c += 4;
                         }
                     }
@@ -155,7 +158,7 @@ int main(int argc, char *argv[]){
             //output code 2: the following code will output the register 
             //value to screen at every cycle and wait for the ENTER key
             //to be pressed; this will make it proceed to the next cycle 
-            printf("cycle: %d ",sim_cycle);
+            printf("cycle: %d \n",sim_cycle);
             for (i = 1; i < REG_NUM; i++){
                 printf("%2d: %d\t%s\n", i, registers[i].value, registers[i].flag ? "true" : "false");
             }
@@ -163,7 +166,7 @@ int main(int argc, char *argv[]){
             printf("press ENTER to continue\n");
             while(getchar() != '\n');
         }
-            
+        
         sim_cycle += 1;
     }
 
@@ -257,6 +260,12 @@ struct Instruction *stringToInstruction(char* line) {
         a->rt = registerStringtoInt(tokens[2]);
         a->rd = 0;
         a->immediate = atoi(tokens[3]);
+    } else {
+        a->opcode = -1;
+        a->rs = -1;
+        a->rt = -1;
+        a->rd = -1;
+        a->immediate = -1;
     }
     
     return a;
@@ -290,62 +299,21 @@ int registerStringtoInt(char *s) {
 	return reg;
 }
 
-bool clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD, int c, int m, int n) {
-    if (writeBack(stateD)) {
-        if (memory(stateC, stateD, c)) {
-            if (execute(stateB, stateC, pc, m, n)) {
-                if (instructionDecode(stateA, stateB)) {
-                    if (instructionFetch(*pc, stateA)) {
-                        (*pc)++;
-                    }
-                }
-            }
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
-
 /**
  * Stages
  */
 
 // IF
-bool instructionFetch(int pc, struct LatchA *result) {
-    struct Instruction inst = instructionMem[pc / 4];
+bool instructionFetch(struct LatchA *result) {
+    struct Instruction inst = instructionMem[pgm_c / 4];
     if (inst.opcode == haltSimulation) {
-        result->instruction.opcode = haltSimulation;
-        result->instruction.rt = 0;
-        result->instruction.rs = 0;
-        result->instruction.rd = 0;
-        result->instruction.immediate = 0;
+        result->instruction = inst;
         return false;
     }
     ifCounter++;
     
-    if (result->cycles == 0) {
-        if (inst.opcode == beq) {
-            result->cycles = 3;
-        } else {
-            result->cycles = 1;
-        }
-    }
-    result->cycles--;
-    if (result->cycles == 0) {
-        result->instruction = inst;
-        return true;
-    } else if(inst.opcode == beq) {
-        result->instruction = inst;
-        return false;
-    } else {
-        result->instruction.opcode = add;
-        result->instruction.rt = 0;
-        result->instruction.rs = 0;
-        result->instruction.rd = 0;
-        result->instruction.immediate = 0;
-        return false;
-    }
+    result->instruction = inst;
+    return true;
 }
 
 // ID
@@ -374,6 +342,7 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
             readRT = false;
             break;
     }
+    
     // Check that registers are unflagged
     // flag == false, register not safe
     if (registers[state->instruction.rs].flag && (!readRT || registers[state->instruction.rt].flag)) {
@@ -406,7 +375,16 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
         }
         result->immediate = state->instruction.immediate;
         
-        return true;
+        if (state->instruction.opcode == beq) {
+            state->instruction.opcode = add;
+            state->instruction.rs = 0;
+            state->instruction.rt = 0;
+            state->instruction.rd = 0;
+            state->instruction.immediate = 0;
+            return false;
+        } else {
+            return true;
+        }
     } else {
         // send NOP add $0, $s0, $s0
         result->opcode = add;
@@ -420,7 +398,7 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
 }
 
 // EXE
-bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiplyCycles, int otherCycles) {
+bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, int otherCycles) {
     if (state->opcode == haltSimulation) {
         result->opcode = haltSimulation;
         result->reg2 = 0;
@@ -460,7 +438,7 @@ bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiply
     state->cycles--;
     if (state->cycles == 0) {
         if (state->opcode == beq && aluResult == 0) {
-            (*pc) += state->immediate;
+            pgm_c += (state->immediate << 2);
         }
         result->opcode = state->opcode;
         result->reg2 = state->reg2;
