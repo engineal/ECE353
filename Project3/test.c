@@ -9,8 +9,7 @@
 
 bool registerStringtoIntTest(void);
 bool stringToInstructionTest(void);
-bool verifyOpcodeTest(void);
-bool verifyRegisterTest(void);
+bool verifyInstructionTest(void);
 bool instructionFetchTest(void);
 bool instructionDecodeTest(void);
 bool executeTest(void);
@@ -22,8 +21,7 @@ int main(int argc, char *argv[]) {
     
     result &= registerStringtoIntTest();
     result &= stringToInstructionTest();
-    result &= verifyOpcodeTest();
-    result &= verifyRegisterTest();
+    result &= verifyInstructionTest();
     result &= executeTest();
     result &= writeBackTest();
     
@@ -48,7 +46,7 @@ bool registerStringtoIntTest(void) {
         pass &= (result[i] == r);
     }
     
-    printf("\t%s\n\n", pass ? "true" : "false");
+    printf("\t%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
@@ -119,41 +117,64 @@ bool stringToInstructionTest(void) {
         pass &= result[i].immediate == inst->immediate;
     }
     
-    printf("\t%s\n\n", pass ? "true" : "false");
+    printf("\t%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
-bool verifyOpcodeTest(void) {
+bool verifyInstructionTest(void) {
     printf("verifyOpcode() Test\n");
-	Opcode input[] = {-1, add, sub, addi, mul, lw, sw, beq, haltSimulation, 8};
-    bool result[] = {false, true, true, true, true, true, true, true, false};
+	Opcode inputOpcodes[] = {-1, add, sub, addi, mul, lw, sw, beq, haltSimulation, 8};
+    bool resultOpcodes[] = {false, true, true, true, true, true, true, true, true, false};
+    
+	int inputRegisters[] = {-1, 0, 1, 20, 30, 31, 32};
+    bool resultRegisters[] = {false, true, true, true, true, true, false};
+    
+	int inputImmediate[] = {-32769, -32768, -32767, 0, 32766, 32767, 32768};
+    bool resultImmediate[] = {false, true, true, true, true, true, false};
+    
     bool pass = true;
     
     int i;
-    for (i = 0; i < 7; i++) {
-        bool r = verifyOpcode(input[i]);
-        printf("input: %d, expected result: %s, result: %s\n", input[i], result[i] ? "true" : "false", r ? "true" : "false");
-        pass &= (result[i] == r);
+    for (i = 0; i < 10; i++) {
+        struct Instruction inst;
+        inst.opcode = inputOpcodes[i];
+        inst.rs = 0;
+        inst.rt = 0;
+        inst.rd = 0;
+        inst.immediate = 0;
+        
+        bool r = verifyInstruction(&inst);
+        printf("input: %d, expected result: %s, result: %s\n", inputOpcodes[i], resultOpcodes[i] ? "true" : "false", r ? "true" : "false");
+        pass &= (resultOpcodes[i] == r);
     }
     
-    printf("\t%s\n\n", pass ? "true" : "false");
-    return pass;
-}
-
-bool verifyRegisterTest(void) {
-    printf("verifyRegister() Test\n");
-	int input[] = {-1, 0, 1, 20, 30, 31, 32};
-    bool result[] = {false, true, true, true, true, true, false};
-    bool pass = true;
-    
-    int i;
     for (i = 0; i < 7; i++) {
-        bool r = verifyRegister(input[i]);
-        printf("input: %d, expected result: %s, result: %s\n", input[i], result[i] ? "true" : "false", r ? "true" : "false");
-        pass &= (result[i] == r);
+        struct Instruction inst;
+        inst.opcode = add;
+        inst.rs = inputRegisters[i];
+        inst.rt = inputRegisters[i];
+        inst.rd = inputRegisters[i];
+        inst.immediate = 0;
+        
+        bool r = verifyInstruction(&inst);
+        printf("input: %d, expected result: %s, result: %s\n", inputRegisters[i], resultRegisters[i] ? "true" : "false", r ? "true" : "false");
+        pass &= (resultRegisters[i] == r);
     }
     
-    printf("\t%s\n\n", pass ? "true" : "false");
+    for (i = 0; i < 7; i++) {
+        struct Instruction inst;
+        inst.opcode = add;
+        inst.rs = 0;
+        inst.rt = 0;
+        inst.rd = 0;
+        inst.immediate = inputImmediate[i];
+        
+        bool r = verifyInstruction(&inst);
+        printf("input: %d, expected result: %s, result: %s\n", inputImmediate[i], resultImmediate[i] ? "true" : "false", r ? "true" : "false");
+        pass &= (resultImmediate[i] == r);
+    }
+    
+    printf("\t%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
@@ -182,7 +203,7 @@ bool executeTest(void) {
     bool pass = true;
     pass &= (stateC->result == 14);
     
-    printf("\t%s\n\n", pass ? "true" : "false");
+    printf("\t%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
@@ -204,6 +225,6 @@ bool writeBackTest(void) {
     bool pass = true;
     pass &= (registers[5].value == 5);
     
-    printf("\t%s\n\n", pass ? "true" : "false");
+    printf("\t%s\n\n", pass ? "passed" : "failed");
     return pass;
 }

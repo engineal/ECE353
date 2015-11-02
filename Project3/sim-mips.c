@@ -58,10 +58,7 @@ struct LatchD {
 
 struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
-
 bool verifyInstruction(struct Instruction*);
-bool verifyOpcode(Opcode);
-bool verifyRegister(int);
 
 bool instructionFetch(struct LatchA*);
 bool instructionDecode(struct LatchA*, struct LatchB*);
@@ -348,20 +345,13 @@ int registerStringtoInt(char *s) {
 
 bool verifyInstruction(struct Instruction *inst) {
     bool result = true;
-    result &= verifyOpcode(inst->opcode);
-    result &= verifyRegister(inst->rs);
-    result &= verifyRegister(inst->rt);
-    result &= verifyRegister(inst->rd);
+    result &= (inst->opcode >= 0 && inst->opcode < 8);
+    result &= (inst->rs >= 0 && inst->rs < 32);
+    result &= (inst->rt >= 0 && inst->rt < 32);
+    result &= (inst->rd >= 0 && inst->rd < 32);
+    result &= !(((((inst->immediate) & 0xffff8000) >> 15) + 1) & 0x1fffe);
     
     return result;
-}
-
-bool verifyOpcode(Opcode code) {
-    return code >= 0 && code < 8;
-}
-
-bool verifyRegister(int reg) {
-    return reg >= 0 && reg < 32;
 }
 
 /**
