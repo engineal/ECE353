@@ -544,10 +544,12 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
     int memResult = 0;
     switch (state->opcode) {
     case sw:
-        dataMem[state->result] = state->reg2;
+        assert(state->result % 4 == 0);
+        dataMem[state->result / 4] = state->reg2;
         break;
     case lw:
-        memResult = dataMem[state->result];
+        assert(state->result % 4 == 0);
+        memResult = dataMem[state->result / 4];
         break;
     default:
         memResult = state->result;
