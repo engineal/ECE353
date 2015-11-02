@@ -9,6 +9,7 @@
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
+#define MEM_SIZE 1024
 
 typedef enum {
     add, sub, addi, mul, lw, sw, beq, haltSimulation
@@ -29,6 +30,8 @@ struct Register {
 
 struct LatchA {
     struct Instruction instruction;
+    
+    int cycles;
 };
 
 struct LatchB {
@@ -60,7 +63,7 @@ struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
 int verifyInstruction(struct Instruction*);
 
-bool instructionFetch(struct LatchA*);
+bool instructionFetch(struct LatchA*, int);
 bool instructionDecode(struct LatchA*, struct LatchB*);
 bool execute(struct LatchB*, struct LatchC*, int, int);
 bool memory(struct LatchC*, struct LatchD*, int);
@@ -70,9 +73,9 @@ long pgm_c = 0;//program counter
 //Array of registers
 struct Register registers[REG_NUM];
 //Instruction memory
-struct Instruction instructionMem[1024];
+struct Instruction instructionMem[MEM_SIZE];
 //Data memory
-int dataMem[1024];
+int dataMem[MEM_SIZE];
 
 //define your own counter for the usage of each pipeline stage here
 int ifCounter = 0;
@@ -173,6 +176,7 @@ int main(int argc, char *argv[]){
     stateA->instruction.rt = 0;
     stateA->instruction.rd = 0;
     stateA->instruction.immediate = 0;
+    stateA->cycles = 0;
     
     struct LatchB *stateB = malloc(sizeof(struct LatchB));
     stateB->opcode = add;
@@ -199,7 +203,7 @@ int main(int argc, char *argv[]){
             if (memory(stateC, stateD, c)) {
                 if (execute(stateB, stateC, m, n)) {
                     if (instructionDecode(stateA, stateB)) {
-                        if (instructionFetch(stateA)) {
+                        if (instructionFetch(stateA, c)) {
                             pgm_c += 4;
                         }
                     }
@@ -374,7 +378,7 @@ int verifyInstruction(struct Instruction *inst) {
  */
 
 // IF
-bool instructionFetch(struct LatchA *result) {
+bool instructionFetch(struct LatchA *result, int accessCycles) {
     struct Instruction inst = instructionMem[pgm_c / 4];
     if (inst.opcode == haltSimulation) {
         result->instruction = inst;
@@ -382,8 +386,21 @@ bool instructionFetch(struct LatchA *result) {
     }
     ifCounter++;
     
-    result->instruction = inst;
-    return true;
+    if (result->cycles == 0) {
+        result->cycles = accessCycles;
+    }
+    result->cycles--;
+    if (result->cycles == 0) {
+        result->instruction = inst;
+        return true;
+    } else {
+        result->instruction.opcode = 0;
+        result->instruction.rs = 0;
+        result->instruction.rt = 0;
+        result->instruction.rd = 0;
+        result->instruction.immediate = 0;
+        return false;
+    }
 }
 
 // ID
@@ -509,6 +526,7 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
     if (state->cycles == 0) {
         if (state->opcode == beq && aluResult == 0) {
             pgm_c += (state->immediate << 2);
+            assert(pgm_c > 0 && pgm_c < MEM_SIZE);
         }
         result->opcode = state->opcode;
         result->reg2 = state->reg2;
@@ -516,6 +534,10 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
         result->result = aluResult;
         return true;
     } else {
+        result->opcode = add;
+        result->reg2 = 0;
+        result->regResult = 0;
+        result->result = 0;
         return false;
     }
 }
@@ -563,6 +585,9 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
         result->result = memResult;
         return true;
     } else {
+        result->opcode = add;
+        result->regResult = 0;
+        result->result = 0;
         return false;
     }
 }
