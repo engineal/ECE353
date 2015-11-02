@@ -18,7 +18,7 @@
 
 struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
-void clockTick(long*, struct LatchA*, struct LatchB*, struct LatchC*, struct LatchD*, int, int, int);
+bool clockTick(long*, struct LatchA*, struct LatchB*, struct LatchC*, struct LatchD*, int, int, int);
 
 int main(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
     if (sim_mode == SINGLE) {
         int running;
         while (running) {
-            clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
+            running = clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
             sim_cycle+=1;
 
             //output code 2: the following code will output the register 
@@ -175,14 +175,13 @@ struct Instruction *stringToInstruction(char* line) {
 
 	struct Instruction *a = malloc(sizeof(struct Instruction));
 
-
     if (strcmp(tokens[0], "haltSimulation") == 0) {
         a->opcode = haltSimulation;
         a->rs = 0; 
         a->rt = 0;
         a->rd = 0;
         a->immediate = 0;
-	if (strcmp(tokens[0], "add") == 0) {
+    } else if (strcmp(tokens[0], "add") == 0) {
         a->opcode = add;
         a->rs = registerStringtoInt(tokens[2]); 
         a->rt = registerStringtoInt(tokens[3]);
@@ -257,7 +256,7 @@ int registerStringtoInt(char *s) {
 	return reg;
 }
 
-void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD, int c, int m, int n) {
+bool clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct LatchC *stateC, struct LatchD *stateD, int c, int m, int n) {
     if (writeBack(stateD)) {
         if (memory(stateC, stateD, c)) {
             if (execute(stateB, stateC, pc, m, n)) {
@@ -269,5 +268,8 @@ void clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct La
                 }
             }
         }
+        return true;
+    } else {
+        return false;
     }
 }
