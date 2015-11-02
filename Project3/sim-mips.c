@@ -1,5 +1,4 @@
 // Authors: Aaron Lucia, Sarah Mangels, Matteo Puzella
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,7 +8,6 @@
 #include <ctype.h>
 
 #include "structs.c"
-#include "stages.c"
 #include "verify.c"
 
 #define SINGLE 1
@@ -20,14 +18,32 @@ struct Instruction *stringToInstruction(char*);
 int registerStringtoInt(char*);
 bool clockTick(long*, struct LatchA*, struct LatchB*, struct LatchC*, struct LatchD*, int, int, int);
 
+bool instructionFetch(int, struct LatchA*);
+bool instructionDecode(struct LatchA*, struct LatchB*);
+bool execute(struct LatchB*, struct LatchC*, long*, int, int);
+bool memory(struct LatchC*, struct LatchD*, int);
+bool writeBack(struct LatchD*);
+
+//Array of registers
+struct Register registers[REG_NUM];
+//Instruction memory
+struct Instruction instructionMem[1024];
+//Data memory
+int dataMem[1024];
+
+//define your own counter for the usage of each pipeline stage here
+int ifCounter = 0;
+int idCounter = 0;
+int exCounter = 0;
+int memCounter = 0;
+int wbCounter = 0;
+
 int main(int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
-	long pgm_c=0;//program counter
-	long sim_cycle=0;//simulation cycle counter
-	//define your own counter for the usage of each pipeline stage here
-    double ifUtil, idUtil, exUtil, memUtil, wbUtil;
+	long pgm_c = 0;//program counter
+	long sim_cycle = 0;//simulation cycle counter
 	
 	FILE *input=NULL;
 	FILE *output=NULL;
@@ -67,13 +83,11 @@ int main(int argc, char *argv[]){
 		exit(0);
 	}
 	//initialize registers and program counter
-	if (sim_mode == 1){
-		for (i = 0; i < REG_NUM; i++){
-			registers[i].value = 0;
-            registers[i].flag = true;
-		}
-	}
-	
+    for (i = 0; i < REG_NUM; i++){
+        registers[i].value = 0;
+        registers[i].flag = true;
+    }
+
 	//start your code from here
 
 	//File read
@@ -121,35 +135,55 @@ int main(int argc, char *argv[]){
     stateD->opcode = add;
     stateD->regResult = 0;
     stateD->result = 0;
-
-    if (sim_mode == SINGLE) {
-        int running;
-        while (running) {
-            running = clockTick(&pgm_c, stateA, stateB, stateC, stateD, c, m, n);
-            sim_cycle+=1;
-
+    
+    while (true) {
+        if (writeBack(stateD)) {
+            if (memory(stateC, stateD, c)) {
+                if (execute(stateB, stateC, &pgm_c, m, n)) {
+                    if (instructionDecode(stateA, stateB)) {
+                        if (instructionFetch(pgm_c, stateA)) {
+                            pgm_c += 4;
+                        }
+                    }
+                }
+            }
+        } else {
+            break;
+        }
+        
+        if (sim_mode == SINGLE) {
             //output code 2: the following code will output the register 
             //value to screen at every cycle and wait for the ENTER key
             //to be pressed; this will make it proceed to the next cycle 
-            printf("cycle: %ld\n",sim_cycle);
-            printf("program counter: %ld\n\n",pgm_c);
-            for (i=1;i<REG_NUM;i++){
+            printf("cycle: %d ",sim_cycle);
+            for (i = 1; i < REG_NUM; i++){
                 printf("%2d: %d\t%s\n", i, registers[i].value, registers[i].flag ? "true" : "false");
             }
+            printf("%d\n", pgm_c);
             printf("press ENTER to continue\n");
             while(getchar() != '\n');
         }
-    } else if (sim_mode == BATCH) {
+            
+        sim_cycle += 1;
+    }
+
+    if (sim_mode == BATCH) {
         //add the following code to the end of the simulation, 
         //to output statistics in batch mode
 		fprintf(output,"program name: %s\n",argv[5]);
+        
+        // add the (double) stage_counter/sim_cycle for each 
+        // stage following sequence IF ID EX MEM WB
+        double ifUtil = (double) ifCounter / sim_cycle;
+        double idUtil = (double) idCounter / sim_cycle;
+        double exUtil = (double) exCounter / sim_cycle;
+        double memUtil = (double) memCounter / sim_cycle;
+        double wbUtil = (double) wbCounter / sim_cycle;
 		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n",
-                             ifUtil, idUtil, exUtil, memUtil, wbUtil);
-                     // add the (double) stage_counter/sim_cycle for each 
-                     // stage following sequence IF ID EX MEM WB
+            ifUtil, idUtil, exUtil, memUtil, wbUtil);
 		
 		fprintf(output,"register values ");
-		for (i=1;i<REG_NUM;i++){
+		for (i = 1; i < REG_NUM; i++){
 			fprintf(output, "%d  ", registers[i].value);
 		}
 		fprintf(output, "%ld\n", pgm_c);
@@ -262,7 +296,6 @@ bool clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct La
             if (execute(stateB, stateC, pc, m, n)) {
                 if (instructionDecode(stateA, stateB)) {
                     if (instructionFetch(*pc, stateA)) {
-                        printf("pc++\n");
                         (*pc)++;
                     }
                 }
@@ -272,4 +305,239 @@ bool clockTick(long *pc, struct LatchA *stateA, struct LatchB *stateB, struct La
     } else {
         return false;
     }
+}
+
+/**
+ * Stages
+ */
+
+// IF
+bool instructionFetch(int pc, struct LatchA *result) {
+    struct Instruction inst = instructionMem[pc / 4];
+    if (inst.opcode == haltSimulation) {
+        result->instruction.opcode = haltSimulation;
+        result->instruction.rt = 0;
+        result->instruction.rs = 0;
+        result->instruction.rd = 0;
+        result->instruction.immediate = 0;
+        return false;
+    }
+    ifCounter++;
+    
+    if (result->cycles == 0) {
+        if (inst.opcode == beq) {
+            result->cycles = 3;
+        } else {
+            result->cycles = 1;
+        }
+    }
+    result->cycles--;
+    if (result->cycles == 0) {
+        result->instruction = inst;
+        return true;
+    } else if(inst.opcode == beq) {
+        result->instruction = inst;
+        return false;
+    } else {
+        result->instruction.opcode = add;
+        result->instruction.rt = 0;
+        result->instruction.rs = 0;
+        result->instruction.rd = 0;
+        result->instruction.immediate = 0;
+        return false;
+    }
+}
+
+// ID
+bool instructionDecode(struct LatchA *state, struct LatchB *result) {
+    if (state->instruction.opcode == haltSimulation) {
+        result->opcode = haltSimulation;
+        result->reg1 = 0;
+        result->reg2 = 0;
+        result->regResult = 0;
+        result->immediate = 0;
+        return false;
+    }
+    idCounter++;
+    
+    bool readRT;
+    switch (state->instruction.opcode) {
+        case add:
+        case sub:
+        case mul:
+        case beq:
+        case sw:
+            readRT = true;
+            break; 
+        case addi:
+        case lw:
+            readRT = false;
+            break;
+    }
+    // Check that registers are unflagged
+    // flag == false, register not safe
+    if (registers[state->instruction.rs].flag && (!readRT || registers[state->instruction.rt].flag)) {
+        //flag == true, registers safe
+        result->opcode = state->instruction.opcode; 
+        result->reg1 = registers[state->instruction.rs].value; //pass reg value
+        if (readRT) {
+            result->reg2 = registers[state->instruction.rt].value; //pass reg value
+        } else {
+            result->reg2 = 0;
+        }
+        switch (state->instruction.opcode) {
+            case add:
+            case sub:
+            case mul:
+                result->regResult = state->instruction.rd;
+                break; 
+            case addi:
+            case lw:
+                result->regResult = state->instruction.rt;
+                break;
+            default:
+                result->regResult = 0;
+                break;
+        }
+        
+        //set write register flags to false (not safe)
+        if (result->regResult != 0) {
+            registers[result->regResult].flag = false;
+        }
+        result->immediate = state->instruction.immediate;
+        
+        return true;
+    } else {
+        // send NOP add $0, $s0, $s0
+        result->opcode = add;
+        result->reg1 = 0;
+        result->reg2 = 0;
+        result->regResult = 0;
+        result->immediate = 0;
+        
+        return false;
+    }
+}
+
+// EXE
+bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiplyCycles, int otherCycles) {
+    if (state->opcode == haltSimulation) {
+        result->opcode = haltSimulation;
+        result->reg2 = 0;
+        result->regResult = 0;
+        result->result = 0;
+        return false;
+    }
+    exCounter++;
+    
+    if (state->cycles == 0) {
+        if (state->opcode == mul) {
+            state->cycles = multiplyCycles;
+        } else {
+            state->cycles = otherCycles;
+        }
+    }
+    
+    int aluResult = 0;
+    switch (state->opcode) {
+    case add:
+        aluResult = state->reg1 + state->reg2;
+        break;
+    case sub:
+    case beq:
+        aluResult = state->reg1 - state->reg2;
+        break;
+    case mul:
+        aluResult = state->reg1 * state->reg2;
+        break;
+    case addi:
+    case sw:
+    case lw:
+        aluResult = state->reg1 + state->immediate;
+        break;
+    }
+    
+    state->cycles--;
+    if (state->cycles == 0) {
+        if (state->opcode == beq && aluResult == 0) {
+            (*pc) += state->immediate;
+        }
+        result->opcode = state->opcode;
+        result->reg2 = state->reg2;
+        result->regResult = state->regResult;
+        result->result = aluResult;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// MEM
+bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
+    if (state->opcode == haltSimulation) {
+        result->opcode = haltSimulation;
+        result->regResult = 0;
+        result->result = 0;
+        return false;
+    }
+    memCounter++;
+    
+    if (state->cycles == 0) {
+        switch (state->opcode) {
+        case sw:
+        case lw:
+            state->cycles = accessCycles;
+            break;
+        default:
+            state->cycles = 1;
+            break;
+        }
+    }
+    int memResult = 0;
+    switch (state->opcode) {
+    case sw:
+        dataMem[state->result] = state->reg2;
+        break;
+    case lw:
+        memResult = dataMem[state->result];
+        break;
+    default:
+        memResult = state->result;
+        break;
+    }
+    
+    state->cycles--;
+    if (state->cycles == 0) {
+        result->opcode = state->opcode;
+        result->regResult = state->regResult;
+        result->result = memResult;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// WB
+bool writeBack(struct LatchD *state) {
+    if (state->opcode == haltSimulation){
+        return false;
+    }
+    wbCounter++;
+    
+    switch (state->opcode) {
+    case add:
+    case sub:
+    case addi:
+    case lw:
+    case mul:
+        if (state->regResult != 0) {
+            registers[state->regResult].value = state->result;
+            registers[state->regResult].flag = true;
+        }
+        break;
+    default:
+        break;
+    }
+    
+    return true;
 }
