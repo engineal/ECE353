@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <ctype.h>
 
 #define SINGLE 1
 #define BATCH 0
@@ -217,11 +218,11 @@ int main(int argc, char *argv[]){
             //output code 2: the following code will output the register 
             //value to screen at every cycle and wait for the ENTER key
             //to be pressed; this will make it proceed to the next cycle 
-            printf("cycle: %d \n",sim_cycle);
+            printf("cycle: %ld \n",sim_cycle);
             for (i = 1; i < REG_NUM; i++){
                 printf("%2d: %d\t%s\n", i, registers[i].value, registers[i].flag ? "true" : "false");
             }
-            printf("%d\n", pgm_c);
+            printf("%ld\n", pgm_c);
             printf("press ENTER to continue\n");
             while(getchar() != '\n');
         }
@@ -356,7 +357,7 @@ int registerStringtoInt(char *s) {
 }
 
 int verifyInstruction(struct Instruction *inst) {
-    if (inst->opcode < 0 || inst->opcode > 7) {
+    if (inst->opcode > 7) {
         return 1;
     }
     if (inst->rs < 0 || inst->rs > 31 ||
@@ -422,6 +423,7 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
             readRT = true;
             break; 
         case addi:
+        case haltSimulation:
         case lw:
             readRT = false;
             break;
@@ -516,6 +518,8 @@ bool execute(struct LatchB *state, struct LatchC *result, int multiplyCycles, in
     case sw:
     case lw:
         aluResult = state->reg1 + state->immediate;
+        break;
+    default:
         break;
     }
     
