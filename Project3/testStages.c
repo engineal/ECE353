@@ -37,13 +37,19 @@ bool executeTest(void) {
         registers[i].flag = true;
     }
     
+    int pc = 0;
+    
+    struct LatchD *stateC = malloc(sizeof(struct LatchC));
+    stateC->opcode = add;
+    stateC->regResult = 5;
+    stateC->result = 5;
+    
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
     stateD->opcode = add;
-    stateD->rd = 5;
+    stateD->regResult = 5;
     stateD->result = 5;
-    stateD->ready = true;
     
-    writeBack(stateD);
+    execute(stateC, stateD);
     
     bool pass = true;
     pass &= (registers[5].value == 5);
@@ -61,9 +67,8 @@ bool writeBackTest(void) {
     
     struct LatchD *stateD = malloc(sizeof(struct LatchD));
     stateD->opcode = add;
-    stateD->rd = 5;
+    stateD->regResult = 5;
     stateD->result = 5;
-    stateD->ready = true;
     
     writeBack(stateD);
     

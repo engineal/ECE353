@@ -1,7 +1,6 @@
-addi $t1 $zero 9
-addi $t6 $zero 5
-addi $t7 $zero 4
-add $s1,$t1,$t6
-mul  $t8,$t1,$s1
-sub $t5,$t1,$t7
-sw $s2, 0($t5)
+addi $t0 $zero 10
+sw $t0, 0($t0)
+addi $t1 $zero 1
+addi $t2 $zero 2
+addi $t3 $zero 3
+lw $s0, 0($t0)

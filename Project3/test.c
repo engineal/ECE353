@@ -54,6 +54,7 @@ bool clockTickTest(void) {
     }
     
     long pc = 0;
+    
     struct LatchA *stateA = malloc(sizeof(struct LatchA));
     stateA->instruction.opcode = add;
     stateA->instruction.rs = 0; 
@@ -65,6 +66,7 @@ bool clockTickTest(void) {
     stateB->reg1 = 0;
     stateB->reg2 = 0;
     stateB->regResult = 0;
+    stateB->immediate = 0;
     
     struct LatchC *stateC = malloc(sizeof(struct LatchC));
     stateC->opcode = add;
@@ -77,11 +79,11 @@ bool clockTickTest(void) {
     stateD->result = 5;
     stateD->regResult = 1;
     
-    for (i = 0; i < 32; i++){
-        //printf("%2d: %d\n", i, registers[i].value);
-    }
+    clockTick(&pc, stateA, stateB, stateC, stateD, 1, 1, 1);
     
     bool pass = true;
+    
+    pass &= registers[1].value == 5;
     
     return pass;
 }
@@ -120,16 +122,16 @@ bool stringToInstructionTest(void) {
     result[3].rd = 0;
     result[3].immediate = 156;
 
-    input[4] = "lw $t0 156";
+    input[4] = "lw $t0 156($s1)";
     result[4].opcode = lw;
-    result[4].rs = 0;
+    result[4].rs = 17;
     result[4].rt = 8;
     result[4].rd = 0;
     result[4].immediate = 156;
 
-    input[5] = "sw $t0 156";
+    input[5] = "sw $t0 156($s1)";
     result[5].opcode = sw;
-    result[5].rs = 0;
+    result[5].rs = 17;
     result[5].rt = 8;
     result[5].rd = 0;
     result[5].immediate = 156;
