@@ -8,7 +8,7 @@ int dataMem[1024];
 // IF
 bool instructionFetch(int pc, struct LatchA *result) {
     printf("instructionFetch: %d\n", instructionMem[pc].opcode);
-    if (instructionMem[pc].opcode = haltSimulation){
+    if (instructionMem[pc].opcode == haltSimulation){
         result->instruction.opcode = haltSimulation;
         result->instruction.rt = 0;
         result->instruction.rs = 0;
@@ -45,12 +45,12 @@ bool instructionFetch(int pc, struct LatchA *result) {
 // ID
 bool instructionDecode(struct LatchA *state, struct LatchB *result) {
     printf("instructionDecode: %d\n", state->instruction.opcode);
-     if (state->instruction.opcode = haltSimulation){
-        result->instruction.opcode = haltSimulation;
-        result->instruction.rt = 0;
-        result->instruction.rs = 0;
-        result->instruction.rd = 0;
-        result->instruction.immediate = 0;
+     if (state->instruction.opcode == haltSimulation){
+        result->opcode = haltSimulation;
+        result->reg1= 0;
+        result->reg2= 0;
+        result->regResult= 0;
+        result->immediate = 0;
         return false;
     }
     else{
@@ -117,12 +117,11 @@ bool instructionDecode(struct LatchA *state, struct LatchB *result) {
 // EXE
 bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiplyCycles, int otherCycles) {
     printf("execute: %ld\t%d\t%d\t%d\t%d\t%d\n", *pc, state->opcode, state->reg1, state->reg2, state->regResult, state->immediate);
-     if (state->instruction.opcode = haltSimulation){
-        result->instruction.opcode = haltSimulation;
-        result->instruction.rt = 0;
-        result->instruction.rs = 0;
-        result->instruction.rd = 0;
-        result->instruction.immediate = 0;
+     if (state->opcode == haltSimulation){
+        result->opcode = haltSimulation;
+        result->reg2= 0;
+        result->regResult= 0;
+        result->result= 0;
         return false;
     }
     else{
@@ -172,12 +171,10 @@ bool execute(struct LatchB *state, struct LatchC *result, long *pc, int multiply
 // MEM
 bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
     printf("memory: %d\t%d\t%d\t%d\n", state->opcode, state->reg2, state->regResult, state->result);
-     if (state->instruction.opcode = haltSimulation){
-        result->instruction.opcode = haltSimulation;
-        result->instruction.rt = 0;
-        result->instruction.rs = 0;
-        result->instruction.rd = 0;
-        result->instruction.immediate = 0;
+     if (state->opcode == haltSimulation){
+        result->opcode = haltSimulation;
+        result->regResult= 0;
+        result->result= 0;
         return false;
     }
     else{
@@ -220,7 +217,7 @@ bool memory(struct LatchC *state, struct LatchD *result, int accessCycles) {
 // WB
 bool writeBack(struct LatchD *state) {
     printf("writeBack: %d\t%d\t%d\n", state->opcode, state->regResult, state->result);
-     if (state->instruction.opcode = haltSimulation){
+     if (state->opcode == haltSimulation){
         return false;
     }
     else{
