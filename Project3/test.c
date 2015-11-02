@@ -7,8 +7,8 @@
 
 #include "sim-mips.c"
 
-bool registerStringtoIntTest(void);
-bool stringToInstructionTest(void);
+bool regNumberConverterTest(void);
+bool parserTest(void);
 bool verifyInstructionTest(void);
 bool instructionFetchTest(void);
 bool instructionDecodeTest(void);
@@ -19,8 +19,8 @@ bool writeBackTest(void);
 int main(int argc, char *argv[]) {
     bool result = true;
     
-    result &= registerStringtoIntTest();
-    result &= stringToInstructionTest();
+    result &= regNumberConverterTest();
+    result &= parserTest();
     result &= verifyInstructionTest();
     result &= executeTest();
     result &= writeBackTest();
@@ -33,29 +33,30 @@ int main(int argc, char *argv[]) {
     return result;
 }
 
-bool registerStringtoIntTest(void) {
-    printf("registerStringtoInt() Test\n");
-	char *input[] = {"Hello", "$zero", "$0", "0", "$AT", "$t8", "$ra", "$gP", "29"};
-    int result[] = {-1, 0, 0, 0, 1, 24, 31, 28, 29};
+bool regNumberConverterTest(void) {
+    printf("regNumberConverter() Test\n");
+	char *input[] = {"Hello", "$zero", "$0", "0", "$AT", "$t8", "$ra", "$gP", "29", "$16", "s0"};
+    int result[] = {-1, 0, 0, 0, 1, 24, 31, 28, 29, 16, -1};
     bool pass = true;
     
     int i;
-    for (i = 0; i < 9; i++) {
-        int r = registerStringtoInt(input[i]);
-        printf("input: %s, expected result: %d, result: %d\n", input[i], result[i], r);
+    for (i = 0; i < 11; i++) {
+        int r = regNumberConverter(input[i]);
+        printf("%s\tinput: %s\texpected result: %d\tresult: %d\n",
+            pass ? "passed" : "failed", input[i], result[i], r);
         pass &= (result[i] == r);
     }
     
-    printf("\t%s\n\n", pass ? "passed" : "failed");
+    printf("%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
-bool stringToInstructionTest(void) {
-    printf("stringToInstruction() Test\n");
+bool parserTest(void) {
+    printf("parser() Test\n");
     
-    char *input[7];
-    struct Instruction result[7];
-    //t0 =8, s0 = 16, s1= 17
+    char *input[8];
+    struct Instruction result[8];
+    //t0 = 8, s0 = 16, s1 = 17
     input[0] = "add $s0 $s1 $t0";
     result[0].opcode = add;
     result[0].rs = 17;
@@ -80,7 +81,7 @@ bool stringToInstructionTest(void) {
     input[3] = "addi $s0 $s1 156";
     result[3].opcode = addi;
     result[3].rs = 17;
-    result[3].rt = 8;
+    result[3].rt = 16;
     result[3].rd = 0;
     result[3].immediate = 156;
 
@@ -100,24 +101,33 @@ bool stringToInstructionTest(void) {
 
     input[6] = "beq $s0 $s1 156";
     result[6].opcode = beq;
-    result[6].rs = 17;
-    result[6].rt = 8;
+    result[6].rs = 16;
+    result[6].rt = 17;
     result[6].rd = 0;
     result[6].immediate = 156;
+
+    input[7] = "lw $t0 156 )$s1";
+    result[7].opcode = -1;
+    result[7].rs = -1;
+    result[7].rt = -1;
+    result[7].rd = -1;
+    result[7].immediate = -1;
 
     bool pass = true;
     
     int i;
-    for (i = 0; i < 1; i++) {
-        struct Instruction *inst = stringToInstruction(input[i]);
+    for (i = 0; i < 8; i++) {
+        struct Instruction *inst = parser(input[i]);
         pass &= result[i].opcode == inst->opcode;
         pass &= result[i].rs == inst->rs;
         pass &= result[i].rt == inst->rt;
         pass &= result[i].rd == inst->rd;
         pass &= result[i].immediate == inst->immediate;
+        printf("%s\tinput: %s\texpected result: %d\tresult: %d\n",
+            pass ? "passed" : "failed", input[i], result[i].opcode, inst->opcode);
     }
     
-    printf("\t%s\n\n", pass ? "passed" : "failed");
+    printf("%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
@@ -144,7 +154,8 @@ bool verifyInstructionTest(void) {
         inst.immediate = 0;
         
         int r = verifyInstruction(&inst);
-        printf("input: %d, expected result: %d, result: %d\n", inputOpcodes[i], resultOpcodes[i], r);
+        printf("%s\tinput: %d\texpected result: %d\tresult: %d\n",
+            pass ? "passed" : "failed", inputOpcodes[i], resultOpcodes[i], r);
         pass &= (resultOpcodes[i] == r);
     }
     
@@ -157,7 +168,8 @@ bool verifyInstructionTest(void) {
         inst.immediate = 0;
         
         int r = verifyInstruction(&inst);
-        printf("input: %d, expected result: %d, result: %d\n", inputRegisters[i], resultRegisters[i], r);
+        printf("%s\tinput: %d\texpected result: %d\tresult: %d\n",
+            pass ? "passed" : "failed", inputRegisters[i], resultRegisters[i], r);
         pass &= (resultRegisters[i] == r);
     }
     
@@ -170,11 +182,12 @@ bool verifyInstructionTest(void) {
         inst.immediate = inputImmediate[i];
         
         int r = verifyInstruction(&inst);
-        printf("input: %d, expected result: %d, result: %d\n", inputImmediate[i], resultImmediate[i], r);
+        printf("%s\tinput: %d\texpected result: %d,\tresult: %d\n",
+            pass ? "passed" : "failed", inputImmediate[i], resultImmediate[i], r);
         pass &= (resultImmediate[i] == r);
     }
     
-    printf("\t%s\n\n", pass ? "passed" : "failed");
+    printf("%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
@@ -203,7 +216,7 @@ bool executeTest(void) {
     bool pass = true;
     pass &= (stateC->result == 14);
     
-    printf("\t%s\n\n", pass ? "passed" : "failed");
+    printf("%s\n\n", pass ? "passed" : "failed");
     return pass;
 }
 
@@ -225,6 +238,6 @@ bool writeBackTest(void) {
     bool pass = true;
     pass &= (registers[5].value == 5);
     
-    printf("\t%s\n\n", pass ? "passed" : "failed");
+    printf("%s\n\n", pass ? "passed" : "failed");
     return pass;
 }

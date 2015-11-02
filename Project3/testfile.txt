@@ -1,0 +1,43 @@
+addi $t2, $0, 5
+add $s0, $t0, $t1
+addi $s2, $t5, 40
+sub $s3, $t4, $t6
+mul $s1, $s2, $s3
+beq $t7, $t8, 400
+lw $s0, 100($t0)
+sw $s1, 100($t1)
+
+add $15, $450, $32
+addi $15, $t5, 400000000000000000000000000000000000000000
+sub $15, $e4, $f6
+mul $s15, $s20, $88
+lw $s1, 102($t0)
+sw $s1, 103($t1)
+
+add $gp, $zero, $0
+addi $at, $v0, 40
+sub $v1, $a0, $t6
+mul $a1, $a2, $a3
+beq $t8, $t9, 400
+lw $gp, 100($sp)
+sw $fp, 100($ra)
+
+add          $s0, $t0, $t1
+addi, $s2, $t5, 40
+sub $s3, $t4,,,, $t6
+mul $s1, $       s2   ,         $s3
+mul $s1, $       s2,         $s3
+beq $t7, $t8, (400)
+lw $s0, 100($t0)
+sw $s1, 100($t1)
+add; $s0; $t0; $t1;
+addi $s2, $t5! 40
+sub $3x, $4t, $zeroo
+mul s1, s2, s3
+beqp $t7, $t8, 400
+lws $s0, 100($t0)
+swl $s1, 100($t1)
+add $s0, 100($t0)
+addi $s1, 100($t1)
+lw $s0, $t0, $t1
+haltSimulation

@@ -1,0 +1,10 @@
+addi $t2, $12,  -8 
+sw $s1, 0($t1)
+lw $a0, 0 ($s1)
+addi $t1, $t2, 6
+add $s0, $t1, $t2
+beq $t8, $t9, 8
+mul $t1, $t0, $t2
+lw $s1 , 4($a1   )    
+sub $t1, $v0, $0
+haltSimulation

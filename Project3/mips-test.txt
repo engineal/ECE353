@@ -1,9 +1,13 @@
-addi $t0 $zero 10
+addi $8 0 10
 sw $t0, 2($t0)
+
 addi $t1 $zero 1
 addi $t2 $t2 1
 addi $t3 $t3 1
+
 beq $t0 $t3 1
 beq $t1 $t2 -3
 lw $s0, 2($t0)
 haltSimulation
+
+lw $s0, 2($t0)

@@ -1,4 +1,0 @@
-program name: mips-test.txt
-stage utilization: 0.443038  0.962025  0.974684  0.987342  1.000000 
-register values 0  0  0  0  0  0  0  10  1  1  10  0  0  0  0  10  0  0  0  0  0  0  0  0  0  0  0  0  0  0  5  
-36

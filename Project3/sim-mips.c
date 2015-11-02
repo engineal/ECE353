@@ -60,8 +60,8 @@ struct LatchD {
     int result;
 };
 
-struct Instruction *stringToInstruction(char*);
-int registerStringtoInt(char*);
+struct Instruction *parser(char*);
+int regNumberConverter(char*);
 int verifyInstruction(struct Instruction*);
 
 bool instructionFetch(struct LatchA*, int);
@@ -139,31 +139,37 @@ int main(int argc, char *argv[]){
 	//File read
 	char *line = malloc(sizeof(char) * 136);
     i = 0;
+    int linenum = 1;
     bool error = false;
 	while (fgets(line, 136, input)) {
         char *pos;
         if ((pos = strchr(line, '\n')) != NULL) {
             *pos = '\0';
         }
-		struct Instruction *inst = stringToInstruction(line);
-        switch (verifyInstruction(inst)) {
-        case 0:
-            instructionMem[i] = *inst;
-            break;
-        case 1:
-            fprintf(output, "Illegal opcode on line %d: %s\n", i + 1, line);
-            error = true;
-            break;
-        case 2:
-            fprintf(output, "Illegal register on line %d: %s\n", i + 1, line);
-            error = true;
-            break;
-        case 3:
-            fprintf(output, "Immediate out of bounds on line %d: %s\n", i + 1, line);
-            error = true;
-            break;
+		struct Instruction *inst = parser(line);
+        if (inst != NULL) {
+            switch (verifyInstruction(inst)) {
+            case 0:
+                instructionMem[i++] = *inst;
+                break;
+            case 1:
+                printf("Illegal opcode on line %d: %s\n", linenum, line);
+                fprintf(output, "Illegal opcode on line %d: %s\n", linenum, line);
+                error = true;
+                break;
+            case 2:
+                printf("Illegal register on line %d: %s\n", linenum, line);
+                fprintf(output, "Illegal register on line %d: %s\n", linenum, line);
+                error = true;
+                break;
+            case 3:
+                printf("Immediate out of bounds on line %d: %s\n", linenum, line);
+                fprintf(output, "Immediate out of bounds on line %d: %s\n", linenum, line);
+                error = true;
+                break;
+            }
         }
-        i++;
+        linenum++;
 	}
     free(line);
     
@@ -260,19 +266,28 @@ int main(int argc, char *argv[]){
 // end main
 
 //takes in the tokens of an instruction as an array, returns a struct Instruction
-struct Instruction *stringToInstruction(char* line) {
+struct Instruction *parser(char* line) {
     char *tokens[6];
     char *lineCopy = malloc(sizeof(char) * 136);
     strcpy(lineCopy, line);
+        
     tokens[0] = strtok(lineCopy, " ,;()");
     int i = 0;
     while (tokens[i] != NULL && i < 5) { //puts tokens into array, to be put into an struct Instruction
         tokens[++i] = strtok(NULL, " ,;()");
     }
+    
+    // brackets not matched
+    if (((strchr(line, '(') != NULL) ^ (strchr(line, ')') != NULL)) || 
+        (strchr(line, '(') > strchr(line, ')'))) {
+            tokens[0] = "err";
+    }
 
 	struct Instruction *a = malloc(sizeof(struct Instruction));
 
-    if (strcmp(tokens[0], "haltSimulation") == 0) {
+    if (tokens[0] == NULL) {
+        return NULL;
+    } else if (strcmp(tokens[0], "haltSimulation") == 0) {
         a->opcode = haltSimulation;
         a->rs = 0; 
         a->rt = 0;
@@ -280,44 +295,44 @@ struct Instruction *stringToInstruction(char* line) {
         a->immediate = 0;
     } else if (strcmp(tokens[0], "add") == 0) {
         a->opcode = add;
-        a->rs = registerStringtoInt(tokens[2]); 
-        a->rt = registerStringtoInt(tokens[3]);
-        a->rd = registerStringtoInt(tokens[1]);
+        a->rs = regNumberConverter(tokens[2]); 
+        a->rt = regNumberConverter(tokens[3]);
+        a->rd = regNumberConverter(tokens[1]);
         a->immediate = 0;
     } else if (strcmp(tokens[0], "sub") == 0) {
         a->opcode = sub;
-        a->rs = registerStringtoInt(tokens[2]); 
-        a->rt = registerStringtoInt(tokens[3]);
-        a->rd = registerStringtoInt(tokens[1]);
+        a->rs = regNumberConverter(tokens[2]); 
+        a->rt = regNumberConverter(tokens[3]);
+        a->rd = regNumberConverter(tokens[1]);
         a->immediate = 0;
     } else if (strcmp(tokens[0], "addi") == 0) {
         a->opcode = addi;
-        a->rs = registerStringtoInt(tokens[2]);
-        a->rt = registerStringtoInt(tokens[1]);
+        a->rs = regNumberConverter(tokens[2]);
+        a->rt = regNumberConverter(tokens[1]);
         a->rd = 0;
         a->immediate = atoi(tokens[3]);
     } else if (strcmp(tokens[0], "mul") == 0) {
         a->opcode = mul;
-        a->rs = registerStringtoInt(tokens[2]); 
-        a->rt = registerStringtoInt(tokens[3]);
-        a->rd = registerStringtoInt(tokens[1]);
+        a->rs = regNumberConverter(tokens[2]); 
+        a->rt = regNumberConverter(tokens[3]);
+        a->rd = regNumberConverter(tokens[1]);
         a->immediate = 0;
     } else if (strcmp(tokens[0], "lw") == 0) {
         a->opcode = lw;
-        a->rs = registerStringtoInt(tokens[3]);
-        a->rt = registerStringtoInt(tokens[1]);
+        a->rs = regNumberConverter(tokens[3]);
+        a->rt = regNumberConverter(tokens[1]);
         a->rd = 0;
         a->immediate = atoi(tokens[2]);
     } else if (strcmp(tokens[0], "sw") == 0) {
         a->opcode = sw;
-        a->rs = registerStringtoInt(tokens[3]);
-        a->rt = registerStringtoInt(tokens[1]);
+        a->rs = regNumberConverter(tokens[3]);
+        a->rt = regNumberConverter(tokens[1]);
         a->rd = 0;
         a->immediate = atoi(tokens[2]);
     } else if (strcmp(tokens[0], "beq") == 0) {
         a->opcode = beq;
-        a->rs = registerStringtoInt(tokens[1]);
-        a->rt = registerStringtoInt(tokens[2]);
+        a->rs = regNumberConverter(tokens[1]);
+        a->rt = regNumberConverter(tokens[2]);
         a->rd = 0;
         a->immediate = atoi(tokens[3]);
     } else {
@@ -332,7 +347,7 @@ struct Instruction *stringToInstruction(char* line) {
 }
 
 //takes in register string returns register number, to be used as index for registers[] array
-int registerStringtoInt(char *s) {
+int regNumberConverter(char *s) {
     int i;
     char regstr[strlen(s) + 1];
     for (i = 0; s[i]; i++) {
@@ -343,11 +358,13 @@ int registerStringtoInt(char *s) {
 	char* regNames[] = {"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
 
 	int reg = -1;
-	if(sscanf(regstr, "%d", &reg) != 1){            // handles reg # without $
-        if (sscanf(regstr + 1, "%d", &reg) == 0) {  // handles reg # with $
-            for (i = 0; i < 32; i++) {              // handles reg text with $
-                if (strcmp(regNames[i], regstr + 1) == 0) {
-                    reg = i;
+	if(sscanf(regstr, "%d", &reg) != 1){            // handles reg # as int without $
+        if (*regstr == '$') {                       // handles reg # with $
+            if (sscanf(regstr + 1, "%d", &reg) != 1) { // handles reg # as int with $
+                for (i = 0; i < 32; i++) {          // handles reg # as text with $
+                    if (strcmp(regNames[i], regstr + 1) == 0) {
+                        reg = i;
+                    }
                 }
             }
         }
