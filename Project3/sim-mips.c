@@ -248,7 +248,7 @@ int main(int argc, char *argv[]){
 		for (i = 1; i < REG_NUM; i++){
 			fprintf(output, "%d  ", registers[i].value);
 		}
-		fprintf(output, "%ld\n", pgm_c);
+		fprintf(output, "\n%ld\n", pgm_c);
 	}
     
 	//close input and output files at the end of the simulation
@@ -342,18 +342,15 @@ int registerStringtoInt(char *s) {
 	char* regNames[] = {"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
 
 	int reg = -1;
-	if(sscanf(regstr, "%d", &reg) != 1){ //if its not a string version of an integer (if it is, the int was assigned to reg)
-		for (i = 0; i < 32; i++) {
-			if (strcmp(regNames[i], regstr + 1) == 0) {
-                reg = i;
-            } //they are the same
-		}
+	if(sscanf(regstr, "%d", &reg) != 1){            // handles reg # without $
+        if (sscanf(regstr + 1, "%d", &reg) == 0) {  // handles reg # with $
+            for (i = 0; i < 32; i++) {              // handles reg text with $
+                if (strcmp(regNames[i], regstr + 1) == 0) {
+                    reg = i;
+                }
+            }
+        }
 	}
-    
-    // catches the extra case for "$0"
-    if (reg == -1 && strcmp("$0", regstr) == 0) {
-        reg = 0;
-    }
 	
 	return reg;
 }
